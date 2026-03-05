@@ -13,9 +13,10 @@ import { useState } from 'react';
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { jobs } = useData();
+  const { jobs, updateJobStatus } = useData();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<'details' | 'materials' | 'time' | 'photos' | 'notes'>('details');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const job = jobs.find(j => j.id === id);
 
@@ -31,8 +32,21 @@ export default function JobDetailPage() {
   const profit = (job.total_price ?? 0) - (job.materials_cost ?? 0) - (job.labor_cost ?? 0);
   const margin = (job.total_price ?? 0) > 0 ? (profit / (job.total_price ?? 0)) * 100 : 0;
 
-  const handleStatusChange = (newStatus: string) => {
-    toast.success(`Job status updated to ${newStatus}`);
+  const statusLabels: Record<string, string> = {
+    scheduled: 'Scheduled', in_progress: 'In Progress', completed: 'Completed',
+    on_hold: 'On Hold', cancelled: 'Cancelled',
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    setIsUpdating(true);
+    try {
+      await updateJobStatus(job.id, newStatus);
+      toast.success(`Job status updated to ${statusLabels[newStatus] || newStatus}`);
+    } catch {
+      toast.error('Failed to update job status');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -57,16 +71,16 @@ export default function JobDetailPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {job.status === 'scheduled' && (
-              <Button icon={<PlayCircle className="w-4 h-4" />} onClick={() => handleStatusChange('in_progress')}>Start Job</Button>
+              <Button icon={<PlayCircle className="w-4 h-4" />} onClick={() => handleStatusChange('in_progress')} loading={isUpdating}>Start Job</Button>
             )}
             {job.status === 'in_progress' && (
               <>
-                <Button variant="secondary" icon={<PauseCircle className="w-4 h-4" />} onClick={() => handleStatusChange('on_hold')}>On Hold</Button>
-                <Button icon={<CheckCircle className="w-4 h-4" />} onClick={() => handleStatusChange('completed')}>Complete</Button>
+                <Button variant="secondary" icon={<PauseCircle className="w-4 h-4" />} onClick={() => handleStatusChange('on_hold')} loading={isUpdating}>On Hold</Button>
+                <Button icon={<CheckCircle className="w-4 h-4" />} onClick={() => handleStatusChange('completed')} loading={isUpdating}>Complete</Button>
               </>
             )}
             {job.status === 'on_hold' && (
-              <Button icon={<PlayCircle className="w-4 h-4" />} onClick={() => handleStatusChange('in_progress')}>Resume</Button>
+              <Button icon={<PlayCircle className="w-4 h-4" />} onClick={() => handleStatusChange('in_progress')} loading={isUpdating}>Resume</Button>
             )}
             <Button variant="secondary" icon={<Edit className="w-4 h-4" />}>Edit</Button>
           </div>

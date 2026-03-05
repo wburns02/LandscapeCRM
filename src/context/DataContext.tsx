@@ -88,6 +88,7 @@ interface DataContextType {
   refreshEquipment: () => Promise<void>;
   refreshCrews: () => Promise<void>;
   refreshSchedule: () => Promise<void>;
+  updateJobStatus: (jobId: string, status: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -413,6 +414,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     try { const data = await api.get<ScheduleEvent[]>('/schedule'); setScheduleEvents(data); } catch { /* keep current */ }
   }, []);
 
+  const updateJobStatus = useCallback(async (jobId: string, status: string) => {
+    try {
+      await api.patch(`/jobs/${jobId}`, { status });
+    } catch {
+      // API unavailable (demo mode) — continue with local update
+    }
+    setJobs(prev => prev.map(j =>
+      j.id === jobId ? { ...j, status: status as Job['status'], updated_at: new Date().toISOString() } : j
+    ));
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchAll();
@@ -429,6 +441,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         isLoading, error, refresh: fetchAll, refreshCustomers, refreshJobs,
         refreshInventory, refreshQuotes, refreshInvoices, refreshLeads,
         refreshContracts, refreshEquipment, refreshCrews, refreshSchedule,
+        updateJobStatus,
       }}
     >
       {children}
