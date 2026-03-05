@@ -23,7 +23,7 @@ export default function EquipmentPage() {
     if (!search) return equipment;
     return equipment.filter(e =>
       e.name.toLowerCase().includes(search.toLowerCase()) ||
-      e.type.toLowerCase().includes(search.toLowerCase()) ||
+      (e.type ?? 'other').toLowerCase().includes(search.toLowerCase()) ||
       e.make?.toLowerCase().includes(search.toLowerCase())
     );
   }, [equipment, search]);

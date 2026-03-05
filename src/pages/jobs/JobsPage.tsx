@@ -140,15 +140,15 @@ export default function JobsPage() {
                   </span>
                   <span className="flex items-center gap-1">
                     <DollarSign className="w-3.5 h-3.5 text-earth-400" />
-                    ${job.total_price.toLocaleString()}
+                    ${(job.total_price ?? 0).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-earth-800/50">
-                  <Badge color="earth">{job.type.replace('_', ' ')}</Badge>
+                  <Badge color="earth">{(job.type ?? 'other').replace('_', ' ')}</Badge>
                   {job.crew && (
                     <span className="flex items-center gap-1.5 text-xs">
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: job.crew.color }} />
-                      <span className={typeColor[job.type] || 'text-earth-300'}>{job.crew.name}</span>
+                      <span className={typeColor[job.type ?? 'other'] || 'text-earth-300'}>{job.crew.name}</span>
                     </span>
                   )}
                 </div>

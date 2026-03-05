@@ -31,8 +31,8 @@ export default function ContractsPage() {
     });
   }, [contracts, search, activeFilter]);
 
-  const totalMonthly = contracts.filter(c => c.is_active).reduce((s, c) => s + c.monthly_value, 0);
-  const totalAnnual = contracts.filter(c => c.is_active).reduce((s, c) => s + c.total_value, 0);
+  const totalMonthly = contracts.filter(c => c.is_active).reduce((s, c) => s + (c.monthly_value ?? 0), 0);
+  const totalAnnual = contracts.filter(c => c.is_active).reduce((s, c) => s + (c.total_value ?? 0), 0);
 
   const handleSubmit = () => {
     if (!formData.title || !formData.customer_id) {
@@ -117,7 +117,7 @@ export default function ContractsPage() {
                   </Badge>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {contract.services.map(s => <Badge key={s} color="earth">{s.replace('_', ' ')}</Badge>)}
+                  {(contract.services ?? []).map(s => <Badge key={s} color="earth">{s.replace('_', ' ')}</Badge>)}
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-2 border-t border-earth-800/50">
                   <div>
@@ -126,12 +126,12 @@ export default function ContractsPage() {
                   </div>
                   <div>
                     <p className="text-xs text-earth-400">Monthly Value</p>
-                    <p className="text-sm font-semibold text-earth-100">${contract.monthly_value.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-earth-100">${(contract.monthly_value ?? 0).toLocaleString()}</p>
                   </div>
                   <div>
                     <p className="text-xs text-earth-400">Period</p>
                     <p className="text-xs text-earth-200">
-                      {format(new Date(contract.start_date), 'MMM d, yyyy')} - {format(new Date(contract.end_date), 'MMM d, yyyy')}
+                      {format(new Date(contract.start_date), 'MMM d, yyyy')} - {contract.end_date ? format(new Date(contract.end_date), 'MMM d, yyyy') : '—'}
                     </p>
                   </div>
                   <div>

@@ -189,7 +189,7 @@ export default function SchedulePage() {
                 <div key={crew.id} className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: crew.color }} />
                   <span className="text-sm text-earth-200">{crew.name}</span>
-                  <span className="text-xs text-earth-400 ml-auto">{crew.members.length} members</span>
+                  <span className="text-xs text-earth-400 ml-auto">{(crew.members ?? []).length} members</span>
                 </div>
               ))}
             </div>

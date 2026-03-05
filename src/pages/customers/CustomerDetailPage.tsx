@@ -39,7 +39,7 @@ export default function CustomerDetailPage() {
   const customerJobs = jobs.filter(j => j.customer_id === customer.id);
   const customerQuotes = quotes.filter(q => q.customer_id === customer.id);
   const customerInvoices = invoices.filter(i => i.customer_id === customer.id);
-  const totalRevenue = customerInvoices.reduce((sum, inv) => sum + inv.amount_paid, 0);
+  const totalRevenue = customerInvoices.reduce((sum, inv) => sum + (inv.amount_paid ?? 0), 0);
 
   const tabs = [
     { key: 'overview', label: 'Overview' },
@@ -183,7 +183,7 @@ export default function CustomerDetailPage() {
                     <p className="text-xs text-earth-400">{format(new Date(job.scheduled_date), 'MMM d, yyyy')} - {job.crew?.name || 'Unassigned'}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-earth-200">${job.total_price.toLocaleString()}</span>
+                    <span className="text-sm font-medium text-earth-200">${(job.total_price ?? 0).toLocaleString()}</span>
                     <StatusBadge status={job.status} />
                   </div>
                 </div>
@@ -203,7 +203,7 @@ export default function CustomerDetailPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-earth-100">{q.title}</p>
-                    <p className="text-xs text-earth-400">Valid until {format(new Date(q.valid_until), 'MMM d, yyyy')}</p>
+                    <p className="text-xs text-earth-400">Valid until {q.valid_until ? format(new Date(q.valid_until), 'MMM d, yyyy') : '—'}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-earth-200">${q.total.toLocaleString()}</span>

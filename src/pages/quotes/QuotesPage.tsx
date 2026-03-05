@@ -111,7 +111,7 @@ export default function QuotesPage() {
                   </div>
                   <p className="text-sm text-earth-400 mt-0.5">{quote.customer?.name} - {quote.line_items.length} line items</p>
                   <p className="text-xs text-earth-500 mt-0.5">
-                    Valid until {format(new Date(quote.valid_until), 'MMM d, yyyy')}
+                    Valid until {quote.valid_until ? format(new Date(quote.valid_until), 'MMM d, yyyy') : '—'}
                     {quote.sent_at && ` - Sent ${format(new Date(quote.sent_at), 'MMM d')}`}
                   </p>
                 </div>

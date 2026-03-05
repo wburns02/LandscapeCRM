@@ -6,6 +6,51 @@ import type {
 import api from '../api/client';
 import { useAuth } from './AuthContext';
 
+// Normalize API responses to match frontend field names
+function normalizeCustomer(c: Customer): Customer {
+  return {
+    ...c,
+    name: c.name || c.company_name || [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unknown',
+    type: c.type || c.customer_type || 'residential',
+    zip: c.zip || c.zip_code || '',
+  };
+}
+
+function normalizeJob(j: Job): Job {
+  return {
+    ...j,
+    type: j.type || j.job_type || 'other',
+    estimated_hours: j.estimated_hours ?? j.estimated_duration_hours ?? 0,
+    actual_hours: j.actual_hours ?? j.actual_duration_hours,
+  };
+}
+
+function normalizeLead(l: Lead): Lead {
+  return {
+    ...l,
+    name: l.name || [l.first_name, l.last_name].filter(Boolean).join(' ') || 'Unknown',
+  };
+}
+
+function normalizeEquipment(e: Equipment): Equipment {
+  return {
+    ...e,
+    type: e.type || e.equipment_type || 'other',
+    last_maintenance: e.last_maintenance || e.last_maintenance_date,
+    next_maintenance: e.next_maintenance || e.next_maintenance_date,
+  };
+}
+
+function normalizeInventory(i: InventoryItem): InventoryItem {
+  return {
+    ...i,
+    quantity: i.quantity ?? i.quantity_on_hand ?? 0,
+    min_stock: i.min_stock ?? i.reorder_level ?? 0,
+    retail_price: i.retail_price ?? i.unit_price ?? 0,
+    supplier: i.supplier || i.supplier_name || '',
+  };
+}
+
 interface DataContextType {
   customers: Customer[];
   jobs: Job[];
@@ -231,7 +276,7 @@ function getDemoData(): {
       job: j,
       title: j.title,
       start: `${j.scheduled_date}T${j.scheduled_time || '08:00'}:00`,
-      end: `${j.scheduled_date}T${String(parseInt(j.scheduled_time?.split(':')[0] || '8') + j.estimated_hours).padStart(2, '0')}:00:00`,
+      end: `${j.scheduled_date}T${String(parseInt(j.scheduled_time?.split(':')[0] || '8') + (j.estimated_hours ?? 0)).padStart(2, '0')}:00:00`,
       crew_id: j.crew_id,
       crew: j.crew,
       color: j.crew?.color,
@@ -298,15 +343,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
         api.get<SystemSettings>('/settings'),
       ]);
 
-      if (c.status === 'fulfilled') setCustomers(c.value);
-      if (j.status === 'fulfilled') setJobs(j.value);
+      if (c.status === 'fulfilled') setCustomers(c.value.map(normalizeCustomer));
+      if (j.status === 'fulfilled') setJobs(j.value.map(normalizeJob));
       if (cr.status === 'fulfilled') setCrews(cr.value);
-      if (inv.status === 'fulfilled') setInventory(inv.value);
+      if (inv.status === 'fulfilled') setInventory(inv.value.map(normalizeInventory));
       if (q.status === 'fulfilled') setQuotes(q.value);
       if (i.status === 'fulfilled') setInvoices(i.value);
       if (co.status === 'fulfilled') setContracts(co.value);
-      if (eq.status === 'fulfilled') setEquipment(eq.value);
-      if (l.status === 'fulfilled') setLeads(l.value);
+      if (eq.status === 'fulfilled') setEquipment(eq.value.map(normalizeEquipment));
+      if (l.status === 'fulfilled') setLeads(l.value.map(normalizeLead));
       if (p.status === 'fulfilled') setPhotos(p.value);
       if (d.status === 'fulfilled') setDashboard(d.value);
       if (s.status === 'fulfilled') setSettings(s.value);
@@ -324,13 +369,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [loadDemoData]);
 
   const refreshCustomers = useCallback(async () => {
-    try { const data = await api.get<Customer[]>('/customers'); setCustomers(data); } catch { /* keep current */ }
+    try { const data = await api.get<Customer[]>('/customers'); setCustomers(data.map(normalizeCustomer)); } catch { /* keep current */ }
   }, []);
   const refreshJobs = useCallback(async () => {
-    try { const data = await api.get<Job[]>('/jobs'); setJobs(data); } catch { /* keep current */ }
+    try { const data = await api.get<Job[]>('/jobs'); setJobs(data.map(normalizeJob)); } catch { /* keep current */ }
   }, []);
   const refreshInventory = useCallback(async () => {
-    try { const data = await api.get<InventoryItem[]>('/inventory'); setInventory(data); } catch { /* keep current */ }
+    try { const data = await api.get<InventoryItem[]>('/inventory'); setInventory(data.map(normalizeInventory)); } catch { /* keep current */ }
   }, []);
   const refreshQuotes = useCallback(async () => {
     try { const data = await api.get<Quote[]>('/quotes'); setQuotes(data); } catch { /* keep current */ }
@@ -339,7 +384,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     try { const data = await api.get<Invoice[]>('/invoices'); setInvoices(data); } catch { /* keep current */ }
   }, []);
   const refreshLeads = useCallback(async () => {
-    try { const data = await api.get<Lead[]>('/leads'); setLeads(data); } catch { /* keep current */ }
+    try { const data = await api.get<Lead[]>('/leads'); setLeads(data.map(normalizeLead)); } catch { /* keep current */ }
   }, []);
 
   useEffect(() => {

@@ -35,9 +35,9 @@ export default function InvoicesPage() {
     });
   }, [invoices, search, statusFilter]);
 
-  const totalOutstanding = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').reduce((sum, i) => sum + (i.total - i.amount_paid), 0);
-  const totalOverdue = invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + (i.total - i.amount_paid), 0);
-  const totalPaidMTD = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount_paid, 0);
+  const totalOutstanding = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').reduce((sum, i) => sum + (i.total - (i.amount_paid ?? 0)), 0);
+  const totalOverdue = invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + (i.total - (i.amount_paid ?? 0)), 0);
+  const totalPaidMTD = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.amount_paid ?? 0), 0);
 
   return (
     <div className="space-y-6">
@@ -88,8 +88,8 @@ export default function InvoicesPage() {
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <p className="text-lg font-bold text-earth-50">${inv.total.toLocaleString()}</p>
-                    {inv.amount_paid > 0 && inv.amount_paid < inv.total && (
-                      <p className="text-xs text-green-400">Paid: ${inv.amount_paid.toLocaleString()}</p>
+                    {(inv.amount_paid ?? 0) > 0 && (inv.amount_paid ?? 0) < inv.total && (
+                      <p className="text-xs text-green-400">Paid: ${(inv.amount_paid ?? 0).toLocaleString()}</p>
                     )}
                   </div>
                   <div className="flex gap-1">

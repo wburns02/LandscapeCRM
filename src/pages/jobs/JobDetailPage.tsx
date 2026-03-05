@@ -28,8 +28,8 @@ export default function JobDetailPage() {
     );
   }
 
-  const profit = job.total_price - job.materials_cost - job.labor_cost;
-  const margin = job.total_price > 0 ? (profit / job.total_price) * 100 : 0;
+  const profit = (job.total_price ?? 0) - (job.materials_cost ?? 0) - (job.labor_cost ?? 0);
+  const margin = (job.total_price ?? 0) > 0 ? (profit / (job.total_price ?? 0)) * 100 : 0;
 
   const handleStatusChange = (newStatus: string) => {
     toast.success(`Job status updated to ${newStatus}`);
@@ -78,7 +78,7 @@ export default function JobDetailPage() {
         <Card>
           <div className="text-center">
             <DollarSign className="w-5 h-5 text-green-400 mx-auto mb-1" />
-            <p className="text-lg font-bold text-earth-50">${job.total_price.toLocaleString()}</p>
+            <p className="text-lg font-bold text-earth-50">${(job.total_price ?? 0).toLocaleString()}</p>
             <p className="text-xs text-earth-400">Total Price</p>
           </div>
         </Card>
@@ -92,13 +92,13 @@ export default function JobDetailPage() {
         <Card>
           <div className="text-center">
             <p className="text-xs text-earth-400 mb-1">Materials</p>
-            <p className="text-lg font-bold text-earth-50">${job.materials_cost.toLocaleString()}</p>
+            <p className="text-lg font-bold text-earth-50">${(job.materials_cost ?? 0).toLocaleString()}</p>
           </div>
         </Card>
         <Card>
           <div className="text-center">
             <p className="text-xs text-earth-400 mb-1">Labor</p>
-            <p className="text-lg font-bold text-earth-50">${job.labor_cost.toLocaleString()}</p>
+            <p className="text-lg font-bold text-earth-50">${(job.labor_cost ?? 0).toLocaleString()}</p>
           </div>
         </Card>
         <Card>
@@ -129,7 +129,7 @@ export default function JobDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card header={<h3 className="text-sm font-semibold text-earth-200">Job Information</h3>}>
             <dl className="space-y-3">
-              <div className="flex justify-between"><dt className="text-sm text-earth-400">Type</dt><dd><Badge color="green">{job.type.replace('_', ' ')}</Badge></dd></div>
+              <div className="flex justify-between"><dt className="text-sm text-earth-400">Type</dt><dd><Badge color="green">{(job.type ?? 'other').replace('_', ' ')}</Badge></dd></div>
               <div className="flex justify-between"><dt className="text-sm text-earth-400">Scheduled Date</dt><dd className="text-sm text-earth-100">{format(new Date(job.scheduled_date), 'MMM d, yyyy')}</dd></div>
               <div className="flex justify-between"><dt className="text-sm text-earth-400">Time</dt><dd className="text-sm text-earth-100">{job.scheduled_time || 'Not set'}</dd></div>
               <div className="flex justify-between"><dt className="text-sm text-earth-400">Est. Hours</dt><dd className="text-sm text-earth-100">{job.estimated_hours}</dd></div>
@@ -144,7 +144,7 @@ export default function JobDetailPage() {
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: job.crew.color }} />
                   <span className="text-sm font-medium text-earth-100">{job.crew.name}</span>
                 </div>
-                {job.crew.members.map(m => (
+                {(job.crew.members ?? []).map(m => (
                   <div key={m.id} className="flex items-center justify-between pl-6">
                     <span className="text-sm text-earth-200">{m.name}</span>
                     <Badge color="earth">{m.role.replace('_', ' ')}</Badge>

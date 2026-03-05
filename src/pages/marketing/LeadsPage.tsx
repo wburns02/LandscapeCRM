@@ -36,8 +36,8 @@ export default function LeadsPage() {
   const filtered = useMemo(() => {
     if (!search) return leads;
     return leads.filter(l =>
-      l.name.toLowerCase().includes(search.toLowerCase()) ||
-      l.service_interest.toLowerCase().includes(search.toLowerCase())
+      (l.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (l.service_interest ?? '').toLowerCase().includes(search.toLowerCase())
     );
   }, [leads, search]);
 
@@ -112,7 +112,7 @@ export default function LeadsPage() {
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <h4 className="text-sm font-medium text-earth-100">{lead.name}</h4>
-                          <Badge color={sourceColors[lead.source]}>{lead.source.replace('_', ' ')}</Badge>
+                          <Badge color={sourceColors[lead.source as LeadSource]}>{lead.source.replace('_', ' ')}</Badge>
                         </div>
                         <p className="text-xs text-earth-400 line-clamp-2">{lead.service_interest}</p>
                         {lead.estimated_value && (
@@ -148,7 +148,7 @@ export default function LeadsPage() {
                   <div className="flex items-center gap-3">
                     <h3 className="font-semibold text-earth-100">{lead.name}</h3>
                     <StatusBadge status={lead.status} />
-                    <Badge color={sourceColors[lead.source]}>{lead.source.replace('_', ' ')}</Badge>
+                    <Badge color={sourceColors[lead.source as LeadSource]}>{lead.source.replace('_', ' ')}</Badge>
                   </div>
                   <p className="text-sm text-earth-400 mt-0.5">{lead.service_interest}</p>
                   <div className="flex flex-wrap gap-3 mt-1 text-xs text-earth-500">

@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  full_name?: string;
   role: 'admin' | 'manager' | 'crew_lead' | 'crew_member';
   avatar_url?: string;
   phone?: string;
@@ -11,24 +12,36 @@ export interface User {
 
 export interface Customer {
   id: string;
+  // API fields
+  first_name?: string;
+  last_name?: string;
+  company_name?: string;
+  customer_type?: string;
+  zip_code?: string;
+  // Frontend-compatible fields
   name: string;
   email: string;
   phone: string;
   address: string;
   city: string;
   state: string;
-  zip: string;
-  type: 'residential' | 'commercial' | 'hoa' | 'municipal';
+  zip?: string;
+  type: string;
   tags: string[];
   property_size_sqft?: number;
   notes?: string;
   lat?: number;
   lng?: number;
+  source?: string;
+  total_spent?: number;
+  job_count?: number;
+  site_photos?: string[];
+  site_map_url?: string;
   created_at: string;
   updated_at: string;
 }
 
-export type JobStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold';
+export type JobStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold' | 'pending';
 export type JobType = 'mowing' | 'landscaping' | 'irrigation' | 'tree_service' | 'hardscape' | 'planting' | 'cleanup' | 'fertilization' | 'pest_control' | 'snow_removal' | 'design' | 'maintenance' | 'other';
 
 export interface Job {
@@ -37,20 +50,33 @@ export interface Job {
   customer?: Customer;
   title: string;
   description?: string;
-  type: JobType;
+  // API uses job_type, frontend uses type
+  job_type?: string;
+  type?: JobType | string;
   status: JobStatus;
+  priority?: string;
   crew_id?: string;
   crew?: Crew;
   scheduled_date: string;
   scheduled_time?: string;
-  estimated_hours: number;
+  // API uses estimated_duration_hours, frontend uses estimated_hours
+  estimated_duration_hours?: number;
+  estimated_hours?: number;
+  actual_duration_hours?: number;
   actual_hours?: number;
-  materials_cost: number;
-  labor_cost: number;
-  total_price: number;
+  materials_cost?: number;
+  labor_cost?: number;
+  total_price?: number;
   notes?: string;
   address?: string;
-  photos: Photo[];
+  lat?: number;
+  lng?: number;
+  is_recurring?: boolean;
+  recurrence_rule?: string;
+  materials_used?: unknown[];
+  before_photos?: string[];
+  after_photos?: string[];
+  photos?: Photo[];
   created_at: string;
   updated_at: string;
 }
@@ -58,10 +84,11 @@ export interface Job {
 export interface Crew {
   id: string;
   name: string;
-  color: string;
+  color?: string;
+  leader_id?: string;
   foreman_id?: string;
   foreman?: CrewMember;
-  members: CrewMember[];
+  members?: CrewMember[];
   is_active: boolean;
   current_job_id?: string;
   vehicle?: string;
@@ -96,23 +123,34 @@ export interface ScheduleEvent {
   type: 'job' | 'meeting' | 'delivery' | 'maintenance' | 'time_off';
 }
 
-export type InventoryCategory = 'plants' | 'trees' | 'mulch' | 'fertilizers' | 'chemicals' | 'hardscape' | 'tools' | 'soil' | 'seed';
+export type InventoryCategory = 'plants' | 'trees' | 'mulch' | 'fertilizers' | 'chemicals' | 'hardscape' | 'tools' | 'soil' | 'seed' | string;
 
 export interface InventoryItem {
   id: string;
   name: string;
   sku?: string;
   category: InventoryCategory;
-  quantity: number;
+  description?: string;
   unit: string;
+  // API fields
+  quantity_on_hand?: number;
+  reorder_level?: number;
   unit_cost: number;
-  retail_price: number;
-  min_stock: number;
+  unit_price?: number;
+  supplier_name?: string;
+  supplier_contact?: string;
+  lot_number?: string;
+  image_url?: string;
+  is_active?: boolean;
+  // Frontend-compatible fields
+  quantity?: number;
+  retail_price?: number;
+  min_stock?: number;
   location?: string;
   supplier?: string;
-  description?: string;
   last_restocked?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired';
@@ -127,6 +165,7 @@ export interface QuoteLineItem {
 
 export interface Quote {
   id: string;
+  quote_number?: string;
   customer_id: string;
   customer?: Customer;
   title: string;
@@ -137,7 +176,7 @@ export interface Quote {
   tax_amount: number;
   total: number;
   notes?: string;
-  valid_until: string;
+  valid_until?: string;
   sent_at?: string;
   accepted_at?: string;
   created_at: string;
@@ -160,13 +199,15 @@ export interface Invoice {
   customer_id: string;
   customer?: Customer;
   job_id?: string;
+  quote_id?: string;
   status: InvoiceStatus;
   line_items: InvoiceLineItem[];
   subtotal: number;
   tax_rate: number;
   tax_amount: number;
   total: number;
-  amount_paid: number;
+  paid_amount?: number;
+  amount_paid?: number;
   due_date: string;
   sent_at?: string;
   paid_at?: string;
@@ -179,8 +220,9 @@ export interface Payment {
   id: string;
   invoice_id: string;
   amount: number;
-  method: 'cash' | 'check' | 'credit_card' | 'ach' | 'other';
+  method: 'cash' | 'check' | 'credit_card' | 'ach' | 'other' | 'card';
   reference?: string;
+  reference_number?: string;
   notes?: string;
   paid_at: string;
 }
@@ -192,14 +234,14 @@ export interface Contract {
   customer_id: string;
   customer?: Customer;
   title: string;
-  services: string[];
-  frequency: ContractFrequency;
+  services?: string[];
+  frequency?: ContractFrequency;
   start_date: string;
-  end_date: string;
-  monthly_value: number;
-  total_value: number;
+  end_date?: string;
+  monthly_value?: number;
+  total_value?: number;
   is_active: boolean;
-  auto_renew: boolean;
+  auto_renew?: boolean;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -210,32 +252,44 @@ export type EquipmentStatus = 'available' | 'in_use' | 'maintenance' | 'retired'
 export interface Equipment {
   id: string;
   name: string;
-  type: string;
+  // API uses equipment_type, frontend uses type
+  equipment_type?: string;
+  type?: string;
   make?: string;
   model?: string;
   serial_number?: string;
+  year?: number;
   purchase_date?: string;
   purchase_price?: number;
+  current_value?: number;
   status: EquipmentStatus;
   assigned_crew_id?: string;
   assigned_crew?: Crew;
+  fuel_type?: string;
   last_maintenance?: string;
   next_maintenance?: string;
+  last_maintenance_date?: string;
+  next_maintenance_date?: string;
   hours_used: number;
   notes?: string;
+  image_url?: string;
   created_at: string;
 }
 
 export interface TimeEntry {
   id: string;
-  crew_member_id: string;
+  user_id?: string;
+  crew_member_id?: string;
   crew_member?: CrewMember;
   job_id?: string;
   job?: Job;
   clock_in: string;
   clock_out?: string;
   hours: number;
+  break_minutes?: number;
   notes?: string;
+  gps_clock_in?: { lat: number; lng: number };
+  gps_clock_out?: { lat: number; lng: number };
   created_at: string;
 }
 
@@ -244,13 +298,20 @@ export type LeadSource = 'website' | 'referral' | 'google' | 'social_media' | 'y
 
 export interface Lead {
   id: string;
-  name: string;
+  // API fields
+  first_name?: string;
+  last_name?: string;
+  // Frontend-compatible
+  name?: string;
   email?: string;
-  phone: string;
+  phone?: string;
   address?: string;
-  source: LeadSource;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  source: LeadSource | string;
   status: LeadStatus;
-  service_interest: string;
+  service_interest?: string;
   estimated_value?: number;
   notes?: string;
   assigned_to?: string;
@@ -273,15 +334,21 @@ export interface Photo {
 }
 
 export interface SystemSettings {
+  id?: string;
   company_name: string;
-  company_email: string;
-  company_phone: string;
-  company_address: string;
+  company_email?: string;
+  company_phone?: string;
+  company_address?: string;
+  company_logo_url?: string;
   tax_rate: number;
-  default_payment_terms: number;
-  currency: string;
-  timezone: string;
+  default_payment_terms?: number;
+  default_payment_terms_days?: number;
+  currency?: string;
+  timezone?: string;
   logo_url?: string;
+  business_hours?: Record<string, unknown>;
+  service_area?: Record<string, unknown>;
+  pricing_templates?: unknown[];
 }
 
 export interface DashboardData {
@@ -338,4 +405,29 @@ export interface CrewPerformance {
   avg_job_time: number;
   revenue_generated: number;
   customer_rating: number;
+}
+
+// Helper to get display name from various entities
+export function getCustomerName(c: Customer): string {
+  return c.name || c.company_name || [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unknown';
+}
+
+export function getLeadName(l: Lead): string {
+  return l.name || [l.first_name, l.last_name].filter(Boolean).join(' ') || 'Unknown';
+}
+
+export function getJobType(j: Job): string {
+  return j.type || j.job_type || 'other';
+}
+
+export function getEquipmentType(e: Equipment): string {
+  return e.type || e.equipment_type || 'other';
+}
+
+export function getInventoryQuantity(i: InventoryItem): number {
+  return i.quantity ?? i.quantity_on_hand ?? 0;
+}
+
+export function getInventoryMinStock(i: InventoryItem): number {
+  return i.min_stock ?? i.reorder_level ?? 0;
 }

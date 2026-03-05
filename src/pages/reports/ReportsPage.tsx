@@ -16,7 +16,7 @@ export default function ReportsPage() {
   const jobsByType = (() => {
     const counts: Record<string, number> = {};
     jobs.forEach(j => {
-      const type = j.type.replace('_', ' ');
+      const type = (j.type ?? 'other').replace('_', ' ');
       counts[type] = (counts[type] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -25,13 +25,13 @@ export default function ReportsPage() {
   const crewPerf = crews.map(crew => {
     const crewJobs = jobs.filter(j => j.crew_id === crew.id);
     const completed = crewJobs.filter(j => j.status === 'completed');
-    const revenue = crewJobs.reduce((s, j) => s + j.total_price, 0);
+    const revenue = crewJobs.reduce((s, j) => s + (j.total_price ?? 0), 0);
     return { name: crew.name, jobs: crewJobs.length, completed: completed.length, revenue };
   });
 
   const topCustomers = customers.map(c => {
     const custInvoices = invoices.filter(i => i.customer_id === c.id);
-    const totalSpent = custInvoices.reduce((s, i) => s + i.amount_paid, 0);
+    const totalSpent = custInvoices.reduce((s, i) => s + (i.amount_paid ?? 0), 0);
     const totalJobs = jobs.filter(j => j.customer_id === c.id).length;
     return { name: c.name, totalSpent, totalJobs, type: c.type };
   }).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 10);
@@ -125,7 +125,7 @@ export default function ReportsPage() {
             <StatCard title="Total Jobs" value={jobs.length} icon={<BarChart3 className="w-5 h-5" />} color="green" />
             <StatCard title="Completed" value={jobs.filter(j => j.status === 'completed').length} icon={<BarChart3 className="w-5 h-5" />} color="green" />
             <StatCard title="In Progress" value={jobs.filter(j => j.status === 'in_progress').length} icon={<BarChart3 className="w-5 h-5" />} color="amber" />
-            <StatCard title="Avg Job Value" value={`$${Math.round(jobs.reduce((s, j) => s + j.total_price, 0) / (jobs.length || 1)).toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} color="sky" />
+            <StatCard title="Avg Job Value" value={`$${Math.round(jobs.reduce((s, j) => s + (j.total_price ?? 0), 0) / (jobs.length || 1)).toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} color="sky" />
           </div>
         </div>
       )}

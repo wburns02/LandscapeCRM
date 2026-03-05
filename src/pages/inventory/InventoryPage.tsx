@@ -36,7 +36,7 @@ export default function InventoryPage() {
     unit_cost: '', retail_price: '', min_stock: '', supplier: '',
   });
 
-  const lowStockItems = useMemo(() => inventory.filter(i => i.quantity <= i.min_stock), [inventory]);
+  const lowStockItems = useMemo(() => inventory.filter(i => (i.quantity ?? 0) <= (i.min_stock ?? 0)), [inventory]);
 
   const filtered = useMemo(() => {
     return inventory.filter(i => {
@@ -115,7 +115,7 @@ export default function InventoryPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map(item => {
-            const isLow = item.quantity <= item.min_stock;
+            const isLow = (item.quantity ?? 0) <= (item.min_stock ?? 0);
             return (
               <Card key={item.id}>
                 <div className="space-y-3">
@@ -150,7 +150,7 @@ export default function InventoryPage() {
                   </div>
                   <div className="flex justify-between text-xs text-earth-400 pt-2 border-t border-earth-800/50">
                     <span>Cost: ${item.unit_cost.toFixed(2)}/{item.unit}</span>
-                    {item.retail_price > 0 && <span>Retail: ${item.retail_price.toFixed(2)}</span>}
+                    {(item.retail_price ?? 0) > 0 && <span>Retail: ${(item.retail_price ?? 0).toFixed(2)}</span>}
                   </div>
                   {item.supplier && <p className="text-xs text-earth-500">Supplier: {item.supplier}</p>}
                 </div>

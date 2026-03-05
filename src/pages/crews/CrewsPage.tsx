@@ -33,7 +33,7 @@ export default function CrewsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-earth-100">Crews</h2>
-          <p className="text-sm text-earth-400">{crews.length} crews, {crews.reduce((s, c) => s + c.members.length, 0)} total members</p>
+          <p className="text-sm text-earth-400">{crews.length} crews, {crews.reduce((s, c) => s + (c.members ?? []).length, 0)} total members</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} onClick={() => setShowAddModal(true)}>Add Crew</Button>
       </div>
@@ -61,7 +61,7 @@ export default function CrewsPage() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-earth-100">{crew.name}</h3>
-                        <p className="text-xs text-earth-400">{crew.members.length} members</p>
+                        <p className="text-xs text-earth-400">{(crew.members ?? []).length} members</p>
                       </div>
                     </div>
                     <Badge color={crew.is_active ? 'green' : 'earth'} dot>
@@ -77,7 +77,7 @@ export default function CrewsPage() {
                   )}
 
                   <div className="space-y-2">
-                    {crew.members.map(member => (
+                    {(crew.members ?? []).map(member => (
                       <div key={member.id} className="flex items-center justify-between p-2.5 rounded-lg bg-earth-800/30">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-full bg-earth-700 flex items-center justify-center text-xs font-medium text-earth-200">
