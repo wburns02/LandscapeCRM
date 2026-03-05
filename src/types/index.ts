@@ -285,18 +285,23 @@ export interface SystemSettings {
 }
 
 export interface DashboardData {
+  // API fields
+  total_customers?: number;
   active_jobs: number;
   revenue_mtd: number;
   revenue_ytd: number;
-  pending_quotes: number;
+  upcoming_jobs: number | Job[];
   overdue_invoices: number;
-  active_crews: number;
-  low_stock_items: number;
-  new_leads: number;
-  upcoming_jobs: Job[];
-  recent_activity: ActivityItem[];
-  revenue_by_month: { month: string; revenue: number; expenses: number }[];
-  job_status_distribution: { status: string; count: number }[];
+  low_stock_count?: number;
+  crew_utilization?: number;
+  // Derived/mock fields
+  pending_quotes?: number;
+  active_crews?: number;
+  low_stock_items?: number;
+  new_leads?: number;
+  recent_activity?: ActivityItem[];
+  revenue_by_month?: { month: string; revenue: number; expenses: number }[];
+  job_status_distribution?: { status: string; count: number }[];
 }
 
 export interface ActivityItem {

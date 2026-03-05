@@ -21,7 +21,7 @@ const activityIcons: Record<string, typeof CheckCircle> = {
 };
 
 export default function DashboardPage() {
-  const { dashboard, jobs, isLoading } = useData();
+  const { dashboard, jobs, quotes, crews, inventory, leads, isLoading } = useData();
 
   if (isLoading || !dashboard) {
     return (
@@ -31,7 +31,42 @@ export default function DashboardPage() {
     );
   }
 
-  const upcomingJobs = dashboard.upcoming_jobs.length > 0 ? dashboard.upcoming_jobs : jobs.filter(j => j.status === 'scheduled').slice(0, 5);
+  // Derive data from context when API returns simple KPIs
+  const upcomingJobs = Array.isArray(dashboard.upcoming_jobs)
+    ? dashboard.upcoming_jobs
+    : jobs.filter(j => j.status === 'scheduled').slice(0, 5);
+
+  const pendingQuotes = dashboard.pending_quotes ?? quotes.filter(q => q.status === 'sent' || q.status === 'draft').length;
+  const activeCrews = dashboard.active_crews ?? crews.filter(c => c.is_active).length;
+  const lowStockItems = dashboard.low_stock_items ?? dashboard.low_stock_count ?? 0;
+  const newLeads = dashboard.new_leads ?? leads.filter(l => l.status === 'new').length;
+
+  const revenueByMonth = dashboard.revenue_by_month ?? [
+    { month: 'Jan', revenue: 0, expenses: 0 },
+    { month: 'Feb', revenue: 0, expenses: 0 },
+    { month: 'Mar', revenue: dashboard.revenue_mtd, expenses: 0 },
+    { month: 'Apr', revenue: 0, expenses: 0 },
+    { month: 'May', revenue: 0, expenses: 0 },
+    { month: 'Jun', revenue: 0, expenses: 0 },
+    { month: 'Jul', revenue: 0, expenses: 0 },
+    { month: 'Aug', revenue: 0, expenses: 0 },
+    { month: 'Sep', revenue: 0, expenses: 0 },
+    { month: 'Oct', revenue: 0, expenses: 0 },
+    { month: 'Nov', revenue: 0, expenses: 0 },
+    { month: 'Dec', revenue: 0, expenses: 0 },
+  ];
+
+  // Derive job status distribution from jobs data
+  const jobStatusDistribution = dashboard.job_status_distribution ?? (() => {
+    const counts: Record<string, number> = {};
+    jobs.forEach(j => {
+      const label = j.status === 'in_progress' ? 'In Progress' : j.status.charAt(0).toUpperCase() + j.status.slice(1);
+      counts[label] = (counts[label] || 0) + 1;
+    });
+    return Object.entries(counts).map(([status, count]) => ({ status, count }));
+  })();
+
+  const recentActivity = dashboard.recent_activity ?? [];
 
   return (
     <div className="space-y-6">
@@ -40,11 +75,11 @@ export default function DashboardPage() {
         <StatCard title="Active Jobs" value={dashboard.active_jobs} icon={<Briefcase className="w-5 h-5" />} color="green" change={12} />
         <StatCard title="Revenue MTD" value={`$${dashboard.revenue_mtd.toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} color="green" change={8} />
         <StatCard title="Revenue YTD" value={`$${dashboard.revenue_ytd.toLocaleString()}`} icon={<TrendingUp className="w-5 h-5" />} color="sky" />
-        <StatCard title="Pending Quotes" value={dashboard.pending_quotes} icon={<FileText className="w-5 h-5" />} color="amber" />
+        <StatCard title="Pending Quotes" value={pendingQuotes} icon={<FileText className="w-5 h-5" />} color="amber" />
         <StatCard title="Overdue Invoices" value={dashboard.overdue_invoices} icon={<AlertCircle className="w-5 h-5" />} color="red" />
-        <StatCard title="Active Crews" value={dashboard.active_crews} icon={<UsersRound className="w-5 h-5" />} color="earth" />
-        <StatCard title="Low Stock Items" value={dashboard.low_stock_items} icon={<Package className="w-5 h-5" />} color="amber" />
-        <StatCard title="New Leads" value={dashboard.new_leads} icon={<Target className="w-5 h-5" />} color="sky" change={25} />
+        <StatCard title="Active Crews" value={activeCrews} icon={<UsersRound className="w-5 h-5" />} color="earth" />
+        <StatCard title="Low Stock Items" value={lowStockItems} icon={<Package className="w-5 h-5" />} color="amber" />
+        <StatCard title="New Leads" value={newLeads} icon={<Target className="w-5 h-5" />} color="sky" change={25} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -52,7 +87,7 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2" header={<h3 className="text-base font-semibold font-display text-earth-100">Monthly Revenue & Expenses</h3>}>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dashboard.revenue_by_month}>
+              <BarChart data={revenueByMonth}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#4d3c30" />
                 <XAxis dataKey="month" stroke="#a68360" fontSize={12} />
                 <YAxis stroke="#a68360" fontSize={12} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
@@ -70,31 +105,35 @@ export default function DashboardPage() {
         {/* Job Status Distribution */}
         <Card header={<h3 className="text-base font-semibold font-display text-earth-100">Job Status</h3>}>
           <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={dashboard.job_status_distribution}
-                  dataKey="count"
-                  nameKey="status"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  innerRadius={40}
-                  paddingAngle={4}
-                  label={({ name, value }: { name?: string; value?: number }) => `${name || ''}: ${value || 0}`}
-                  labelLine={false}
-                >
-                  {dashboard.job_status_distribution.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#2a1f18', border: '1px solid #5e4838', borderRadius: 8, color: '#f0ebe3' }} />
-                <Legend
-                  verticalAlign="bottom"
-                  formatter={(value: string) => <span className="text-earth-300 text-xs">{value}</span>}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {jobStatusDistribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={jobStatusDistribution}
+                    dataKey="count"
+                    nameKey="status"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    innerRadius={40}
+                    paddingAngle={4}
+                    label={({ name, value }: { name?: string; value?: number }) => `${name || ''}: ${value || 0}`}
+                    labelLine={false}
+                  >
+                    {jobStatusDistribution.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: '#2a1f18', border: '1px solid #5e4838', borderRadius: 8, color: '#f0ebe3' }} />
+                  <Legend
+                    verticalAlign="bottom"
+                    formatter={(value: string) => <span className="text-earth-300 text-xs">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-earth-400 py-4 text-center">No job data available</p>
+            )}
           </div>
         </Card>
       </div>
@@ -122,7 +161,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-xs font-medium text-earth-200">
-                      {format(new Date(job.scheduled_date), 'MMM d')}
+                      {job.scheduled_date ? format(new Date(job.scheduled_date), 'MMM d') : '—'}
                     </p>
                     <p className="text-xs text-earth-400">{job.scheduled_time || '8:00 AM'}</p>
                   </div>
@@ -173,7 +212,7 @@ export default function DashboardPage() {
           {/* Activity Feed */}
           <Card header={<h3 className="text-base font-semibold font-display text-earth-100">Recent Activity</h3>}>
             <div className="space-y-3">
-              {dashboard.recent_activity.map(activity => {
+              {recentActivity.length > 0 ? recentActivity.map(activity => {
                 const Icon = activityIcons[activity.type] || Clock;
                 return (
                   <div key={activity.id} className="flex items-start gap-3">
@@ -188,7 +227,9 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 );
-              })}
+              }) : (
+                <p className="text-xs text-earth-400 text-center py-2">No recent activity</p>
+              )}
             </div>
           </Card>
         </div>
