@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Phone, Mail, MapPin, Calendar, DollarSign, Briefcase, FileText, Receipt } from 'lucide-react';
+import { ArrowLeft, Edit, Phone, Mail, MapPin, Calendar, DollarSign, Briefcase, FileText, Receipt, Trash2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -18,11 +19,13 @@ type Tab = 'overview' | 'jobs' | 'quotes' | 'invoices' | 'notes';
 export default function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { customers, jobs, quotes, invoices, updateCustomer } = useData();
+  const { customers, jobs, quotes, invoices, updateCustomer, refreshCustomers } = useData();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const customer = customers.find(c => c.id === id);
 
@@ -73,6 +76,22 @@ export default function CustomerDetailPage() {
       toast.error('Failed to update customer');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!customer) return;
+    setIsDeleting(true);
+    try {
+      await api.delete(`/customers/${customer.id}`);
+      toast.success(`Customer "${customer.name}" deleted`);
+      await refreshCustomers();
+      navigate('/customers');
+    } catch {
+      toast.error('Failed to delete customer');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -137,7 +156,10 @@ export default function CustomerDetailPage() {
               </div>
             </div>
           </div>
-          <Button variant="secondary" icon={<Edit className="w-4 h-4" />} onClick={openEditModal}>Edit</Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" icon={<Edit className="w-4 h-4" />} onClick={openEditModal}>Edit</Button>
+            <Button variant="danger" icon={<Trash2 className="w-4 h-4" />} onClick={() => setShowDeleteConfirm(true)}>Delete</Button>
+          </div>
         </div>
       </Card>
 
@@ -301,6 +323,24 @@ export default function CustomerDetailPage() {
           <p className="text-sm text-earth-200">{customer.notes || 'No notes for this customer.'}</p>
         </Card>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Delete Customer"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDelete} loading={isDeleting}>Delete</Button>
+          </>
+        }
+      >
+        <p className="text-sm text-earth-200">
+          Are you sure you want to delete <strong>{customer.name}</strong>? This action cannot be undone.
+        </p>
+      </Modal>
 
       {/* Edit Modal */}
       <Modal

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Receipt, DollarSign, Send, AlertCircle } from 'lucide-react';
+import { Receipt, DollarSign, Send, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
 import api from '../../api/client';
@@ -9,6 +9,9 @@ import Card from '../../components/ui/Card';
 import StatCard from '../../components/ui/StatCard';
 import StatusBadge from '../../components/ui/StatusBadge';
 import EmptyState from '../../components/ui/EmptyState';
+import Modal from '../../components/ui/Modal';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
 import { format } from 'date-fns';
 import type { InvoiceStatus } from '../../types';
 
@@ -21,11 +24,29 @@ const statusTabs: { key: '' | InvoiceStatus; label: string }[] = [
   { key: 'overdue', label: 'Overdue' },
 ];
 
+interface LineItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  total: number;
+}
+
 export default function InvoicesPage() {
-  const { invoices, refreshInvoices } = useData();
+  const { invoices, customers, refreshInvoices } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | InvoiceStatus>('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    customer_id: '',
+    due_date: '',
+    notes: '',
+    tax_rate: '8.25',
+  });
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    { description: '', quantity: 1, unit_price: 0, total: 0 },
+  ]);
 
   const filtered = useMemo(() => {
     return invoices.filter(inv => {
@@ -40,9 +61,79 @@ export default function InvoicesPage() {
   const totalOverdue = invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + (i.total - (i.amount_paid ?? 0)), 0);
   const totalPaidMTD = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.amount_paid ?? 0), 0);
 
+  const subtotal = lineItems.reduce((sum, li) => sum + li.total, 0);
+  const taxRate = parseFloat(formData.tax_rate) || 0;
+  const taxAmount = Math.round(subtotal * taxRate) / 100;
+  const total = subtotal + taxAmount;
+
+  const updateLineItem = (index: number, field: keyof LineItem, value: string) => {
+    setLineItems(prev => prev.map((li, i) => {
+      if (i !== index) return li;
+      const updated = { ...li, [field]: field === 'description' ? value : parseFloat(value) || 0 };
+      updated.total = updated.quantity * updated.unit_price;
+      return updated;
+    }));
+  };
+
+  const addLineItem = () => {
+    setLineItems(prev => [...prev, { description: '', quantity: 1, unit_price: 0, total: 0 }]);
+  };
+
+  const removeLineItem = (index: number) => {
+    if (lineItems.length <= 1) return;
+    setLineItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const resetForm = () => {
+    setFormData({ customer_id: '', due_date: '', notes: '', tax_rate: '8.25' });
+    setLineItems([{ description: '', quantity: 1, unit_price: 0, total: 0 }]);
+  };
+
+  const handleCreateInvoice = async () => {
+    if (!formData.customer_id) {
+      toast.error('Please select a customer');
+      return;
+    }
+    if (lineItems.every(li => !li.description)) {
+      toast.error('Please add at least one line item');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await api.post('/invoices', {
+        customer_id: formData.customer_id,
+        status: 'draft',
+        line_items: lineItems.filter(li => li.description).map((li, idx) => ({
+          id: String(idx + 1),
+          description: li.description,
+          quantity: li.quantity,
+          unit_price: li.unit_price,
+          total: li.total,
+        })),
+        tax_rate: taxRate,
+        due_date: formData.due_date || undefined,
+        notes: formData.notes || undefined,
+      });
+      toast.success('Invoice created');
+      setShowCreateModal(false);
+      resetForm();
+      await refreshInvoices();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create invoice');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-earth-100">Invoices</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-earth-100">Invoices</h2>
+        <Button icon={<Plus className="w-4 h-4" />} onClick={() => setShowCreateModal(true)}>
+          New Invoice
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard title="Outstanding" value={`$${totalOutstanding.toLocaleString()}`} icon={<Receipt className="w-5 h-5" />} color="amber" />
@@ -69,7 +160,7 @@ export default function InvoicesPage() {
       <SearchBar value={search} onChange={setSearch} placeholder="Search invoices..." />
 
       {filtered.length === 0 ? (
-        <EmptyState icon={<Receipt className="w-10 h-10" />} title="No invoices found" description="Invoices will appear here when you create them from completed jobs or quotes." />
+        <EmptyState icon={<Receipt className="w-10 h-10" />} title="No invoices found" description="Create your first invoice to get started." actionLabel="New Invoice" onAction={() => setShowCreateModal(true)} />
       ) : (
         <div className="space-y-3">
           {filtered.map(inv => (
@@ -108,7 +199,7 @@ export default function InvoicesPage() {
                         try {
                           await api.patch(`/invoices/${inv.id}`, {
                             status: 'paid',
-                            amount_paid: inv.total,
+                            paid_amount: inv.total,
                             paid_at: new Date().toISOString(),
                           });
                           toast.success('Payment recorded');
@@ -121,8 +212,8 @@ export default function InvoicesPage() {
               </div>
               {inv.line_items.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-earth-800/50 space-y-1">
-                  {inv.line_items.map(li => (
-                    <div key={li.id} className="flex justify-between text-xs">
+                  {inv.line_items.map((li, idx) => (
+                    <div key={li.id || idx} className="flex justify-between text-xs">
                       <span className="text-earth-300">{li.description}</span>
                       <span className="text-earth-400">${li.total.toFixed(2)}</span>
                     </div>
@@ -133,6 +224,101 @@ export default function InvoicesPage() {
           ))}
         </div>
       )}
+
+      {/* Create Invoice Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => { setShowCreateModal(false); resetForm(); }}
+        title="Create Invoice"
+        size="lg"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => { setShowCreateModal(false); resetForm(); }}>Cancel</Button>
+            <Button onClick={handleCreateInvoice} loading={isSaving}>Create Invoice</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Select
+              label="Customer"
+              required
+              options={[
+                { value: '', label: 'Select customer' },
+                ...customers.map(c => ({ value: c.id, label: c.name })),
+              ]}
+              value={formData.customer_id}
+              onChange={e => setFormData(f => ({ ...f, customer_id: e.target.value }))}
+            />
+            <Input
+              label="Due Date"
+              type="date"
+              value={formData.due_date}
+              onChange={e => setFormData(f => ({ ...f, due_date: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-earth-200">Line Items</label>
+              <button
+                type="button"
+                onClick={addLineItem}
+                className="flex items-center gap-1 text-xs text-green-400 hover:text-green-300 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Item
+              </button>
+            </div>
+            <div className="space-y-2">
+              {lineItems.map((li, idx) => (
+                <div key={idx} className="flex gap-2 items-start">
+                  <input
+                    className="flex-1 px-3 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-100 placeholder:text-earth-500 focus:outline-none focus:ring-2 focus:ring-green-500/40"
+                    placeholder="Description"
+                    value={li.description}
+                    onChange={e => updateLineItem(idx, 'description', e.target.value)}
+                  />
+                  <input
+                    className="w-16 px-2 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-100 text-center focus:outline-none focus:ring-2 focus:ring-green-500/40"
+                    type="number"
+                    placeholder="Qty"
+                    value={li.quantity || ''}
+                    onChange={e => updateLineItem(idx, 'quantity', e.target.value)}
+                  />
+                  <input
+                    className="w-24 px-2 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-100 text-right focus:outline-none focus:ring-2 focus:ring-green-500/40"
+                    type="number"
+                    placeholder="Price"
+                    value={li.unit_price || ''}
+                    onChange={e => updateLineItem(idx, 'unit_price', e.target.value)}
+                  />
+                  <span className="w-20 py-2 text-sm text-earth-300 text-right">${li.total.toFixed(2)}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeLineItem(idx)}
+                    className="p-2 text-earth-500 hover:text-red-400 cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-right space-y-1 text-sm">
+            <p className="text-earth-300">Subtotal: <span className="text-earth-100 font-medium">${subtotal.toFixed(2)}</span></p>
+            <p className="text-earth-300">Tax ({taxRate}%): <span className="text-earth-100 font-medium">${taxAmount.toFixed(2)}</span></p>
+            <p className="text-earth-100 font-bold text-base">Total: ${total.toFixed(2)}</p>
+          </div>
+
+          <Input
+            label="Notes"
+            value={formData.notes}
+            onChange={e => setFormData(f => ({ ...f, notes: e.target.value }))}
+            placeholder="Additional notes..."
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

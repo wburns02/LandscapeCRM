@@ -110,7 +110,7 @@ export default function JobDetailPage() {
   const margin = (job.total_price ?? 0) > 0 ? (profit / (job.total_price ?? 0)) * 100 : 0;
 
   const statusLabels: Record<string, string> = {
-    scheduled: 'Scheduled', in_progress: 'In Progress', completed: 'Completed',
+    pending: 'Pending', scheduled: 'Scheduled', in_progress: 'In Progress', completed: 'Completed',
     on_hold: 'On Hold', cancelled: 'Cancelled',
   };
 
@@ -147,7 +147,7 @@ export default function JobDetailPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {job.status === 'scheduled' && (
+            {(job.status === 'scheduled' || job.status === 'pending') && (
               <Button icon={<PlayCircle className="w-4 h-4" />} onClick={() => handleStatusChange('in_progress')} loading={isUpdating}>Start Job</Button>
             )}
             {job.status === 'in_progress' && (

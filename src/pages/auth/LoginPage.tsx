@@ -28,18 +28,10 @@ export default function LoginPage() {
       await login(email, password);
       navigate(from, { replace: true });
     } catch {
-      // Demo mode: allow any login
-      toast.info('Demo mode: logging in with demo data');
-      localStorage.setItem('gs_token', 'demo_token');
-      window.location.href = from;
+      toast.error('Invalid email or password. Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDemoLogin = () => {
-    localStorage.setItem('gs_token', 'demo_token');
-    window.location.href = '/';
   };
 
   return (
@@ -117,15 +109,6 @@ export default function LoginPage() {
               Sign In
             </Button>
           </form>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-earth-800" /></div>
-            <div className="relative flex justify-center text-xs"><span className="bg-earth-950 px-3 text-earth-500">or</span></div>
-          </div>
-
-          <Button variant="secondary" className="w-full" size="lg" onClick={handleDemoLogin}>
-            Try Demo (No Login Required)
-          </Button>
 
           <p className="text-center text-xs text-earth-500">
             GreenScape CRM v1.0.0

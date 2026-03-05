@@ -5,6 +5,7 @@ type AnyStatus = JobStatus | QuoteStatus | InvoiceStatus | LeadStatus | Equipmen
 
 const statusConfig: Record<string, { color: 'green' | 'amber' | 'red' | 'sky' | 'earth' | 'purple'; label: string }> = {
   // Job statuses
+  pending: { color: 'amber', label: 'Pending' },
   scheduled: { color: 'sky', label: 'Scheduled' },
   in_progress: { color: 'amber', label: 'In Progress' },
   completed: { color: 'green', label: 'Completed' },

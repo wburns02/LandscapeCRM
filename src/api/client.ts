@@ -25,11 +25,6 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   });
 
   if (res.status === 401) {
-    const currentToken = localStorage.getItem('gs_token');
-    if (currentToken === 'demo_token') {
-      // In demo mode, don't redirect — just throw so DataContext falls back to mock data
-      throw new ApiError('Demo mode', 401);
-    }
     localStorage.removeItem('gs_token');
     window.location.href = '/login';
     throw new ApiError('Unauthorized', 401);

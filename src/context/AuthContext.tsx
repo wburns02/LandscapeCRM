@@ -19,18 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = localStorage.getItem('gs_token');
-    if (token === 'demo_token') {
-      // Demo mode — no API call needed
-      setUser({
-        id: 'demo',
-        email: 'admin@greenscape.com',
-        name: 'GreenScape Admin',
-        role: 'admin',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      });
-      setIsLoading(false);
-    } else if (token) {
+    if (token) {
       getCurrentUser()
         .then(setUser)
         .catch(() => {
