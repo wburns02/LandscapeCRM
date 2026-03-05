@@ -1,11 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Phone, Mail, MapPin, Calendar, DollarSign, Briefcase, FileText, Receipt } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import StatusBadge from '../../components/ui/StatusBadge';
 import EmptyState from '../../components/ui/EmptyState';
+import Modal from '../../components/ui/Modal';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
 import { format } from 'date-fns';
 import { useState } from 'react';
 
@@ -14,10 +18,63 @@ type Tab = 'overview' | 'jobs' | 'quotes' | 'invoices' | 'notes';
 export default function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { customers, jobs, quotes, invoices } = useData();
+  const { customers, jobs, quotes, invoices, updateCustomer } = useData();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const customer = customers.find(c => c.id === id);
+
+  const [editData, setEditData] = useState({
+    name: '', email: '', phone: '', address: '', city: '', state: '', zip: '',
+    type: 'residential', property_size_sqft: '', notes: '',
+  });
+
+  const openEditModal = () => {
+    if (!customer) return;
+    setEditData({
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      city: customer.city,
+      state: customer.state,
+      zip: customer.zip || '',
+      type: customer.type,
+      property_size_sqft: customer.property_size_sqft?.toString() || '',
+      notes: customer.notes || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSave = async () => {
+    if (!customer || !editData.name || !editData.phone) {
+      toast.error('Name and phone are required');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await updateCustomer(customer.id, {
+        name: editData.name,
+        email: editData.email,
+        phone: editData.phone,
+        address: editData.address,
+        city: editData.city,
+        state: editData.state,
+        zip: editData.zip,
+        type: editData.type,
+        property_size_sqft: editData.property_size_sqft ? parseInt(editData.property_size_sqft) : undefined,
+        notes: editData.notes || undefined,
+      });
+      toast.success('Customer updated');
+      setShowEditModal(false);
+    } catch {
+      toast.error('Failed to update customer');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (!customer) {
     return (
@@ -80,7 +137,7 @@ export default function CustomerDetailPage() {
               </div>
             </div>
           </div>
-          <Button variant="secondary" icon={<Edit className="w-4 h-4" />}>Edit</Button>
+          <Button variant="secondary" icon={<Edit className="w-4 h-4" />} onClick={openEditModal}>Edit</Button>
         </div>
       </Card>
 
@@ -244,6 +301,51 @@ export default function CustomerDetailPage() {
           <p className="text-sm text-earth-200">{customer.notes || 'No notes for this customer.'}</p>
         </Card>
       )}
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Customer"
+        size="lg"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
+            <Button onClick={handleSave} loading={isSaving}>Save Changes</Button>
+          </>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input label="Name" required value={editData.name} onChange={e => setEditData(f => ({ ...f, name: e.target.value }))} />
+          <Select label="Type" options={[
+            { value: 'residential', label: 'Residential' },
+            { value: 'commercial', label: 'Commercial' },
+            { value: 'hoa', label: 'HOA' },
+            { value: 'municipal', label: 'Municipal' },
+          ]} value={editData.type} onChange={e => setEditData(f => ({ ...f, type: e.target.value }))} />
+          <Input label="Email" type="email" value={editData.email} onChange={e => setEditData(f => ({ ...f, email: e.target.value }))} />
+          <Input label="Phone" type="tel" required value={editData.phone} onChange={e => setEditData(f => ({ ...f, phone: e.target.value }))} />
+          <div className="sm:col-span-2">
+            <Input label="Address" value={editData.address} onChange={e => setEditData(f => ({ ...f, address: e.target.value }))} />
+          </div>
+          <Input label="City" value={editData.city} onChange={e => setEditData(f => ({ ...f, city: e.target.value }))} />
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="State" value={editData.state} onChange={e => setEditData(f => ({ ...f, state: e.target.value }))} />
+            <Input label="ZIP" value={editData.zip} onChange={e => setEditData(f => ({ ...f, zip: e.target.value }))} />
+          </div>
+          <Input label="Property Size (sq ft)" type="number" value={editData.property_size_sqft} onChange={e => setEditData(f => ({ ...f, property_size_sqft: e.target.value }))} />
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-earth-200 mb-1.5">Notes</label>
+            <textarea
+              value={editData.notes}
+              onChange={e => setEditData(f => ({ ...f, notes: e.target.value }))}
+              rows={3}
+              className="w-full px-3.5 py-2.5 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-100 placeholder:text-earth-500 focus:outline-none focus:ring-2 focus:ring-green-500/40 focus:border-green-500/40 resize-none"
+              placeholder="Customer notes..."
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

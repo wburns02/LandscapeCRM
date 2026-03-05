@@ -7,18 +7,95 @@ import Card from '../../components/ui/Card';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
+import Modal from '../../components/ui/Modal';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
 import { format } from 'date-fns';
 import { useState } from 'react';
+import type { JobType } from '../../types';
+
+const jobTypeOptions: { value: JobType; label: string }[] = [
+  { value: 'mowing', label: 'Mowing' },
+  { value: 'landscaping', label: 'Landscaping' },
+  { value: 'irrigation', label: 'Irrigation' },
+  { value: 'tree_service', label: 'Tree Service' },
+  { value: 'hardscape', label: 'Hardscape' },
+  { value: 'planting', label: 'Planting' },
+  { value: 'cleanup', label: 'Cleanup' },
+  { value: 'fertilization', label: 'Fertilization' },
+  { value: 'pest_control', label: 'Pest Control' },
+  { value: 'snow_removal', label: 'Snow Removal' },
+  { value: 'design', label: 'Design' },
+  { value: 'maintenance', label: 'Maintenance' },
+  { value: 'other', label: 'Other' },
+];
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { jobs, updateJobStatus } = useData();
+  const { jobs, crews, updateJobStatus, updateJob } = useData();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<'details' | 'materials' | 'time' | 'photos' | 'notes'>('details');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const job = jobs.find(j => j.id === id);
+
+  const [editData, setEditData] = useState({
+    title: '', type: 'mowing' as JobType, crew_id: '',
+    scheduled_date: '', scheduled_time: '', estimated_hours: '',
+    total_price: '', materials_cost: '', labor_cost: '',
+    description: '', notes: '',
+  });
+
+  const openEditModal = () => {
+    if (!job) return;
+    setEditData({
+      title: job.title,
+      type: (job.type as JobType) || 'other',
+      crew_id: job.crew_id || '',
+      scheduled_date: job.scheduled_date,
+      scheduled_time: job.scheduled_time || '',
+      estimated_hours: job.estimated_hours?.toString() || '',
+      total_price: (job.total_price ?? '').toString(),
+      materials_cost: (job.materials_cost ?? '').toString(),
+      labor_cost: (job.labor_cost ?? '').toString(),
+      description: job.description || '',
+      notes: job.notes || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSave = async () => {
+    if (!job || !editData.title) {
+      toast.error('Title is required');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await updateJob(job.id, {
+        title: editData.title,
+        type: editData.type,
+        crew_id: editData.crew_id || undefined,
+        crew: editData.crew_id ? crews.find(c => c.id === editData.crew_id) : job.crew,
+        scheduled_date: editData.scheduled_date,
+        scheduled_time: editData.scheduled_time || undefined,
+        estimated_hours: parseFloat(editData.estimated_hours) || undefined,
+        total_price: parseFloat(editData.total_price) || undefined,
+        materials_cost: parseFloat(editData.materials_cost) || undefined,
+        labor_cost: parseFloat(editData.labor_cost) || undefined,
+        description: editData.description || undefined,
+        notes: editData.notes || undefined,
+      });
+      toast.success('Job updated');
+      setShowEditModal(false);
+    } catch {
+      toast.error('Failed to update job');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (!job) {
     return (
@@ -82,7 +159,7 @@ export default function JobDetailPage() {
             {job.status === 'on_hold' && (
               <Button icon={<PlayCircle className="w-4 h-4" />} onClick={() => handleStatusChange('in_progress')} loading={isUpdating}>Resume</Button>
             )}
-            <Button variant="secondary" icon={<Edit className="w-4 h-4" />}>Edit</Button>
+            <Button variant="secondary" icon={<Edit className="w-4 h-4" />} onClick={openEditModal}>Edit</Button>
           </div>
         </div>
       </Card>
@@ -195,6 +272,54 @@ export default function JobDetailPage() {
           <p className="text-sm text-earth-200">{job.notes || 'No notes for this job.'}</p>
         </Card>
       )}
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Job"
+        size="lg"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
+            <Button onClick={handleSave} loading={isSaving}>Save Changes</Button>
+          </>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <Input label="Job Title" required value={editData.title} onChange={e => setEditData(f => ({ ...f, title: e.target.value }))} />
+          </div>
+          <Select label="Job Type" options={jobTypeOptions.map(o => ({ value: o.value, label: o.label }))} value={editData.type} onChange={e => setEditData(f => ({ ...f, type: e.target.value as JobType }))} />
+          <Select label="Assign Crew" options={[{ value: '', label: 'Unassigned' }, ...crews.map(c => ({ value: c.id, label: c.name }))]} value={editData.crew_id} onChange={e => setEditData(f => ({ ...f, crew_id: e.target.value }))} />
+          <Input label="Scheduled Date" type="date" value={editData.scheduled_date} onChange={e => setEditData(f => ({ ...f, scheduled_date: e.target.value }))} />
+          <Input label="Scheduled Time" type="time" value={editData.scheduled_time} onChange={e => setEditData(f => ({ ...f, scheduled_time: e.target.value }))} />
+          <Input label="Estimated Hours" type="number" value={editData.estimated_hours} onChange={e => setEditData(f => ({ ...f, estimated_hours: e.target.value }))} />
+          <Input label="Total Price" type="number" value={editData.total_price} onChange={e => setEditData(f => ({ ...f, total_price: e.target.value }))} prefix="$" />
+          <Input label="Materials Cost" type="number" value={editData.materials_cost} onChange={e => setEditData(f => ({ ...f, materials_cost: e.target.value }))} prefix="$" />
+          <Input label="Labor Cost" type="number" value={editData.labor_cost} onChange={e => setEditData(f => ({ ...f, labor_cost: e.target.value }))} prefix="$" />
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-earth-200 mb-1.5">Description</label>
+            <textarea
+              value={editData.description}
+              onChange={e => setEditData(f => ({ ...f, description: e.target.value }))}
+              rows={2}
+              className="w-full px-3.5 py-2.5 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-100 placeholder:text-earth-500 focus:outline-none focus:ring-2 focus:ring-green-500/40 focus:border-green-500/40 resize-none"
+              placeholder="Job description..."
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-earth-200 mb-1.5">Notes</label>
+            <textarea
+              value={editData.notes}
+              onChange={e => setEditData(f => ({ ...f, notes: e.target.value }))}
+              rows={2}
+              className="w-full px-3.5 py-2.5 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-100 placeholder:text-earth-500 focus:outline-none focus:ring-2 focus:ring-green-500/40 focus:border-green-500/40 resize-none"
+              placeholder="Internal notes..."
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

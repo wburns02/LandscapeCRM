@@ -89,6 +89,8 @@ interface DataContextType {
   refreshCrews: () => Promise<void>;
   refreshSchedule: () => Promise<void>;
   updateJobStatus: (jobId: string, status: string) => Promise<void>;
+  updateCustomer: (customerId: string, data: Partial<Customer>) => Promise<void>;
+  updateJob: (jobId: string, data: Partial<Job>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -425,6 +427,53 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ));
   }, []);
 
+  const updateCustomer = useCallback(async (customerId: string, data: Partial<Customer>) => {
+    try {
+      const nameParts = (data.name || '').trim().split(/\s+/);
+      await api.patch(`/customers/${customerId}`, {
+        first_name: nameParts[0] || undefined,
+        last_name: nameParts.slice(1).join(' ') || undefined,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        zip_code: data.zip,
+        customer_type: data.type,
+        property_size_sqft: data.property_size_sqft,
+        notes: data.notes,
+      });
+    } catch {
+      // API unavailable (demo mode) — continue with local update
+    }
+    setCustomers(prev => prev.map(c =>
+      c.id === customerId ? { ...c, ...data, updated_at: new Date().toISOString() } : c
+    ));
+  }, []);
+
+  const updateJob = useCallback(async (jobId: string, data: Partial<Job>) => {
+    try {
+      await api.patch(`/jobs/${jobId}`, {
+        title: data.title,
+        job_type: data.type,
+        crew_id: data.crew_id || undefined,
+        scheduled_date: data.scheduled_date,
+        scheduled_time: data.scheduled_time,
+        estimated_duration_hours: data.estimated_hours,
+        total_price: data.total_price,
+        materials_cost: data.materials_cost,
+        labor_cost: data.labor_cost,
+        description: data.description,
+        notes: data.notes,
+      });
+    } catch {
+      // API unavailable (demo mode) — continue with local update
+    }
+    setJobs(prev => prev.map(j =>
+      j.id === jobId ? { ...j, ...data, updated_at: new Date().toISOString() } : j
+    ));
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchAll();
@@ -441,7 +490,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         isLoading, error, refresh: fetchAll, refreshCustomers, refreshJobs,
         refreshInventory, refreshQuotes, refreshInvoices, refreshLeads,
         refreshContracts, refreshEquipment, refreshCrews, refreshSchedule,
-        updateJobStatus,
+        updateJobStatus, updateCustomer, updateJob,
       }}
     >
       {children}
