@@ -41,6 +41,15 @@ function normalizeEquipment(e: Equipment): Equipment {
   };
 }
 
+function normalizeContract(c: Contract): Contract {
+  return {
+    ...c,
+    is_active: c.is_active ?? (c.status === 'active'),
+    frequency: c.frequency || (c.visit_frequency as Contract['frequency']) || 'monthly',
+    monthly_value: c.monthly_value ?? c.price_per_visit ?? 0,
+  };
+}
+
 function normalizeInventory(i: InventoryItem): InventoryItem {
   return {
     ...i,
@@ -349,7 +358,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (inv.status === 'fulfilled') setInventory(inv.value.map(normalizeInventory));
       if (q.status === 'fulfilled') setQuotes(q.value);
       if (i.status === 'fulfilled') setInvoices(i.value);
-      if (co.status === 'fulfilled') setContracts(co.value);
+      if (co.status === 'fulfilled') setContracts(co.value.map(normalizeContract));
       if (eq.status === 'fulfilled') setEquipment(eq.value.map(normalizeEquipment));
       if (l.status === 'fulfilled') setLeads(l.value.map(normalizeLead));
       if (p.status === 'fulfilled') setPhotos(p.value);

@@ -117,7 +117,10 @@ export default function ContractsPage() {
                   </Badge>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {(contract.services ?? []).map(s => <Badge key={s} color="earth">{s.replace('_', ' ')}</Badge>)}
+                  {(contract.services ?? []).map((s, i) => {
+                    const label = typeof s === 'string' ? s : s.description ?? '';
+                    return <Badge key={i} color="earth">{label.replace('_', ' ')}</Badge>;
+                  })}
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-2 border-t border-earth-800/50">
                   <div>

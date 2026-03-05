@@ -229,18 +229,30 @@ export interface Payment {
 
 export type ContractFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annual' | 'seasonal';
 
+export interface ContractService {
+  description: string;
+  included?: boolean;
+}
+
 export interface Contract {
   id: string;
   customer_id: string;
   customer?: Customer;
   title: string;
-  services?: string[];
+  // API returns objects, frontend may use strings
+  services?: (string | ContractService)[];
+  // API uses visit_frequency, frontend uses frequency
+  visit_frequency?: string;
   frequency?: ContractFrequency;
+  // API uses status string, frontend uses is_active boolean
+  status?: string;
+  contract_type?: string;
+  is_active: boolean;
   start_date: string;
   end_date?: string;
+  price_per_visit?: number;
   monthly_value?: number;
   total_value?: number;
-  is_active: boolean;
   auto_renew?: boolean;
   notes?: string;
   created_at: string;
@@ -430,4 +442,8 @@ export function getInventoryQuantity(i: InventoryItem): number {
 
 export function getInventoryMinStock(i: InventoryItem): number {
   return i.min_stock ?? i.reorder_level ?? 0;
+}
+
+export function getContractServiceName(s: string | ContractService): string {
+  return typeof s === 'string' ? s : s.description ?? '';
 }
