@@ -13,6 +13,7 @@ function normalizeCustomer(c: Customer): Customer {
     name: c.name || c.company_name || [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unknown',
     type: c.type || c.customer_type || 'residential',
     zip: c.zip || c.zip_code || '',
+    tags: c.tags ?? [],
   };
 }
 
