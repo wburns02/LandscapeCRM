@@ -45,7 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await apiLogin(email, password);
-    setUser(result.user);
+    // Map API full_name to frontend name
+    const apiUser = result.user as unknown as Record<string, unknown>;
+    setUser({
+      ...result.user,
+      name: (apiUser.full_name as string) || result.user.name || result.user.email,
+    });
   }, []);
 
   const logout = useCallback(async () => {
