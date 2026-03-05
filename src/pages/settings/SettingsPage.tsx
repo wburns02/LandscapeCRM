@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Save, Building, DollarSign, Users, Palette } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
@@ -33,12 +34,32 @@ export default function SettingsPage() {
     { key: 'appearance', label: 'Appearance', icon: Palette },
   ];
 
-  const handleSaveCompany = () => {
-    toast.success('Company settings saved');
+  const handleSaveCompany = async () => {
+    try {
+      await api.put('/settings', {
+        company_name: companyForm.company_name,
+        company_email: companyForm.company_email,
+        company_phone: companyForm.company_phone,
+        company_address: companyForm.company_address,
+        timezone: companyForm.timezone,
+      });
+      toast.success('Company settings saved');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save settings');
+    }
   };
 
-  const handleSaveBilling = () => {
-    toast.success('Billing settings saved');
+  const handleSaveBilling = async () => {
+    try {
+      await api.put('/settings', {
+        tax_rate: parseFloat(billingForm.tax_rate) || 8.25,
+        default_payment_terms: parseInt(billingForm.default_payment_terms) || 30,
+        currency: billingForm.currency,
+      });
+      toast.success('Billing settings saved');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save settings');
+    }
   };
 
   return (

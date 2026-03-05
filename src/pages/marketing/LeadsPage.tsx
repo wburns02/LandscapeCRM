@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Plus, Target, Phone, Mail, MapPin, ArrowRight, Grid, List, DollarSign } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -24,7 +25,7 @@ const kanbanColumns: { status: LeadStatus; label: string; color: string }[] = [
 ];
 
 export default function LeadsPage() {
-  const { leads } = useData();
+  const { leads, refreshLeads } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
@@ -43,14 +44,30 @@ export default function LeadsPage() {
 
   const pipelineValue = leads.filter(l => !['won', 'lost'].includes(l.status)).reduce((s, l) => s + (l.estimated_value || 0), 0);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.phone) {
       toast.error('Name and phone are required');
       return;
     }
-    toast.success(`Lead "${formData.name}" created`);
-    setShowAddModal(false);
-    setFormData({ name: '', phone: '', email: '', source: 'website', service_interest: '', estimated_value: '' });
+    try {
+      const nameParts = formData.name.trim().split(/\s+/);
+      await api.post('/leads', {
+        first_name: nameParts[0] || '',
+        last_name: nameParts.slice(1).join(' ') || '',
+        phone: formData.phone,
+        email: formData.email || undefined,
+        source: formData.source,
+        status: 'new',
+        service_interest: formData.service_interest || undefined,
+        estimated_value: parseFloat(formData.estimated_value) || undefined,
+      });
+      toast.success(`Lead "${formData.name}" created`);
+      setShowAddModal(false);
+      setFormData({ name: '', phone: '', email: '', source: 'website', service_interest: '', estimated_value: '' });
+      await refreshLeads();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create lead');
+    }
   };
 
   const sourceColors: Record<LeadSource, 'green' | 'sky' | 'amber' | 'earth' | 'purple' | 'red'> = {

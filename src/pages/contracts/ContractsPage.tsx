@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Plus, FileSignature, DollarSign, Calendar, RefreshCw } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -13,7 +14,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import { format } from 'date-fns';
 
 export default function ContractsPage() {
-  const { contracts, customers } = useData();
+  const { contracts, customers, refreshContracts } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'expired'>('all');
@@ -34,14 +35,29 @@ export default function ContractsPage() {
   const totalMonthly = contracts.filter(c => c.is_active).reduce((s, c) => s + (c.monthly_value ?? 0), 0);
   const totalAnnual = contracts.filter(c => c.is_active).reduce((s, c) => s + (c.total_value ?? 0), 0);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title || !formData.customer_id) {
       toast.error('Title and customer are required');
       return;
     }
-    toast.success(`Contract "${formData.title}" created`);
-    setShowAddModal(false);
-    setFormData({ title: '', customer_id: '', frequency: 'monthly', start_date: '', end_date: '', monthly_value: '' });
+    try {
+      await api.post('/contracts', {
+        title: formData.title,
+        customer_id: formData.customer_id,
+        visit_frequency: formData.frequency,
+        start_date: formData.start_date || new Date().toISOString().split('T')[0],
+        end_date: formData.end_date || undefined,
+        price_per_visit: parseFloat(formData.monthly_value) || 0,
+        total_value: (parseFloat(formData.monthly_value) || 0) * 12,
+        status: 'active',
+      });
+      toast.success(`Contract "${formData.title}" created`);
+      setShowAddModal(false);
+      setFormData({ title: '', customer_id: '', frequency: 'monthly', start_date: '', end_date: '', monthly_value: '' });
+      await refreshContracts();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create contract');
+    }
   };
 
   return (

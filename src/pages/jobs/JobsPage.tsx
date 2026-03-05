@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Briefcase, Calendar, Clock, DollarSign } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -41,7 +42,7 @@ const jobTypeOptions: { value: JobType; label: string }[] = [
 ];
 
 export default function JobsPage() {
-  const { jobs, customers, crews } = useData();
+  const { jobs, customers, crews, refreshJobs } = useData();
   const navigate = useNavigate();
   const toast = useToast();
   const [search, setSearch] = useState('');
@@ -62,14 +63,29 @@ export default function JobsPage() {
     });
   }, [jobs, search, statusFilter]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title || !formData.customer_id || !formData.scheduled_date) {
       toast.error('Title, customer, and date are required');
       return;
     }
-    toast.success(`Job "${formData.title}" created`);
-    setShowAddModal(false);
-    setFormData({ title: '', customer_id: '', type: 'mowing', crew_id: '', scheduled_date: '', estimated_hours: '2', total_price: '' });
+    try {
+      await api.post('/jobs', {
+        title: formData.title,
+        customer_id: formData.customer_id,
+        job_type: formData.type,
+        crew_id: formData.crew_id || undefined,
+        scheduled_date: formData.scheduled_date,
+        estimated_duration_hours: parseFloat(formData.estimated_hours) || 2,
+        total_price: parseFloat(formData.total_price) || undefined,
+        status: 'scheduled',
+      });
+      toast.success(`Job "${formData.title}" created`);
+      setShowAddModal(false);
+      setFormData({ title: '', customer_id: '', type: 'mowing', crew_id: '', scheduled_date: '', estimated_hours: '2', total_price: '' });
+      await refreshJobs();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create job');
+    }
   };
 
   const typeColor: Record<string, string> = {

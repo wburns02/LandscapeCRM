@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Plus, FileText, Send, CheckCircle, DollarSign, Trash2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -28,7 +29,7 @@ interface LineItemForm {
 }
 
 export default function QuotesPage() {
-  const { quotes, customers } = useData();
+  const { quotes, customers, refreshQuotes } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | QuoteStatus>('');
@@ -52,15 +53,46 @@ export default function QuotesPage() {
 
   const lineTotal = lineItems.reduce((sum, li) => sum + (parseFloat(li.quantity) || 0) * (parseFloat(li.unit_price) || 0), 0);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title || !formData.customer_id) {
       toast.error('Title and customer are required');
       return;
     }
-    toast.success(`Quote "${formData.title}" created`);
-    setShowCreateModal(false);
-    setFormData({ title: '', customer_id: '', valid_days: '30', notes: '' });
-    setLineItems([{ description: '', quantity: '1', unit_price: '' }]);
+    try {
+      const items = lineItems
+        .filter(li => li.description && li.unit_price)
+        .map(li => ({
+          description: li.description,
+          quantity: parseFloat(li.quantity) || 1,
+          unit_price: parseFloat(li.unit_price) || 0,
+          total: (parseFloat(li.quantity) || 1) * (parseFloat(li.unit_price) || 0),
+        }));
+      const subtotal = items.reduce((s, li) => s + li.total, 0);
+      const taxRate = 8.25;
+      const taxAmount = subtotal * (taxRate / 100);
+      const validUntil = new Date();
+      validUntil.setDate(validUntil.getDate() + (parseInt(formData.valid_days) || 30));
+
+      await api.post('/quotes', {
+        title: formData.title,
+        customer_id: formData.customer_id,
+        line_items: items,
+        subtotal,
+        tax_rate: taxRate,
+        tax_amount: taxAmount,
+        total: subtotal + taxAmount,
+        valid_until: validUntil.toISOString().split('T')[0],
+        notes: formData.notes || undefined,
+        status: 'draft',
+      });
+      toast.success(`Quote "${formData.title}" created`);
+      setShowCreateModal(false);
+      setFormData({ title: '', customer_id: '', valid_days: '30', notes: '' });
+      setLineItems([{ description: '', quantity: '1', unit_price: '' }]);
+      await refreshQuotes();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create quote');
+    }
   };
 
   return (
@@ -122,12 +154,33 @@ export default function QuotesPage() {
                   </div>
                   <div className="flex gap-1">
                     {quote.status === 'draft' && (
-                      <Button variant="ghost" size="sm" icon={<Send className="w-3.5 h-3.5" />} onClick={() => toast.success('Quote sent')}>
+                      <Button variant="ghost" size="sm" icon={<Send className="w-3.5 h-3.5" />} onClick={async () => {
+                        try {
+                          await api.patch(`/quotes/${quote.id}`, { status: 'sent', sent_at: new Date().toISOString() });
+                          toast.success('Quote sent');
+                          await refreshQuotes();
+                        } catch { toast.error('Failed to send quote'); }
+                      }}>
                         Send
                       </Button>
                     )}
                     {quote.status === 'accepted' && (
-                      <Button variant="ghost" size="sm" icon={<DollarSign className="w-3.5 h-3.5" />} onClick={() => toast.success('Invoice created from quote')}>
+                      <Button variant="ghost" size="sm" icon={<DollarSign className="w-3.5 h-3.5" />} onClick={async () => {
+                        try {
+                          await api.post('/invoices', {
+                            customer_id: quote.customer_id,
+                            quote_id: quote.id,
+                            line_items: quote.line_items,
+                            subtotal: quote.subtotal,
+                            tax_rate: quote.tax_rate,
+                            tax_amount: quote.tax_amount,
+                            total: quote.total,
+                            status: 'draft',
+                            due_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+                          });
+                          toast.success('Invoice created from quote');
+                        } catch { toast.error('Failed to create invoice'); }
+                      }}>
                         Invoice
                       </Button>
                     )}

@@ -83,6 +83,10 @@ interface DataContextType {
   refreshQuotes: () => Promise<void>;
   refreshInvoices: () => Promise<void>;
   refreshLeads: () => Promise<void>;
+  refreshContracts: () => Promise<void>;
+  refreshEquipment: () => Promise<void>;
+  refreshCrews: () => Promise<void>;
+  refreshSchedule: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -395,6 +399,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refreshLeads = useCallback(async () => {
     try { const data = await api.get<Lead[]>('/leads'); setLeads(data.map(normalizeLead)); } catch { /* keep current */ }
   }, []);
+  const refreshContracts = useCallback(async () => {
+    try { const data = await api.get<Contract[]>('/contracts'); setContracts(data.map(normalizeContract)); } catch { /* keep current */ }
+  }, []);
+  const refreshEquipment = useCallback(async () => {
+    try { const data = await api.get<Equipment[]>('/equipment'); setEquipment(data.map(normalizeEquipment)); } catch { /* keep current */ }
+  }, []);
+  const refreshCrews = useCallback(async () => {
+    try { const data = await api.get<Crew[]>('/crews'); setCrews(data); } catch { /* keep current */ }
+  }, []);
+  const refreshSchedule = useCallback(async () => {
+    try { const data = await api.get<ScheduleEvent[]>('/schedule'); setScheduleEvents(data); } catch { /* keep current */ }
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -411,6 +427,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         equipment, leads, photos, scheduleEvents, dashboard, settings,
         isLoading, error, refresh: fetchAll, refreshCustomers, refreshJobs,
         refreshInventory, refreshQuotes, refreshInvoices, refreshLeads,
+        refreshContracts, refreshEquipment, refreshCrews, refreshSchedule,
       }}
     >
       {children}

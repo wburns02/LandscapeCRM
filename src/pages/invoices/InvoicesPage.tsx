@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Receipt, DollarSign, Send, AlertCircle } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -21,7 +22,7 @@ const statusTabs: { key: '' | InvoiceStatus; label: string }[] = [
 ];
 
 export default function InvoicesPage() {
-  const { invoices } = useData();
+  const { invoices, refreshInvoices } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | InvoiceStatus>('');
@@ -94,10 +95,26 @@ export default function InvoicesPage() {
                   </div>
                   <div className="flex gap-1">
                     {inv.status === 'draft' && (
-                      <Button variant="ghost" size="sm" icon={<Send className="w-3.5 h-3.5" />} onClick={() => toast.success('Invoice sent')}>Send</Button>
+                      <Button variant="ghost" size="sm" icon={<Send className="w-3.5 h-3.5" />} onClick={async () => {
+                        try {
+                          await api.patch(`/invoices/${inv.id}`, { status: 'sent', sent_at: new Date().toISOString() });
+                          toast.success('Invoice sent');
+                          await refreshInvoices();
+                        } catch { toast.error('Failed to send invoice'); }
+                      }}>Send</Button>
                     )}
                     {(inv.status === 'sent' || inv.status === 'overdue' || inv.status === 'partial') && (
-                      <Button variant="ghost" size="sm" icon={<DollarSign className="w-3.5 h-3.5" />} onClick={() => toast.success('Payment recorded')}>Record Payment</Button>
+                      <Button variant="ghost" size="sm" icon={<DollarSign className="w-3.5 h-3.5" />} onClick={async () => {
+                        try {
+                          await api.patch(`/invoices/${inv.id}`, {
+                            status: 'paid',
+                            amount_paid: inv.total,
+                            paid_at: new Date().toISOString(),
+                          });
+                          toast.success('Payment recorded');
+                          await refreshInvoices();
+                        } catch { toast.error('Failed to record payment'); }
+                      }}>Record Payment</Button>
                     )}
                   </div>
                 </div>

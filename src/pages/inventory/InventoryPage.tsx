@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Plus, Package, AlertTriangle, Minus } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -26,7 +27,7 @@ const categories: { key: '' | InventoryCategory; label: string }[] = [
 ];
 
 export default function InventoryPage() {
-  const { inventory } = useData();
+  const { inventory, refreshInventory } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<'' | InventoryCategory>('');
@@ -47,19 +48,41 @@ export default function InventoryPage() {
     });
   }, [inventory, search, category]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.quantity || !formData.unit) {
       toast.error('Name, quantity, and unit are required');
       return;
     }
-    toast.success(`"${formData.name}" added to inventory`);
-    setShowAddModal(false);
-    setFormData({ name: '', category: 'plants', quantity: '', unit: '', unit_cost: '', retail_price: '', min_stock: '', supplier: '' });
+    try {
+      await api.post('/inventory', {
+        name: formData.name,
+        category: formData.category,
+        unit: formData.unit,
+        quantity_on_hand: parseFloat(formData.quantity) || 0,
+        unit_cost: parseFloat(formData.unit_cost) || 0,
+        unit_price: parseFloat(formData.retail_price) || 0,
+        reorder_level: parseFloat(formData.min_stock) || 0,
+        supplier_name: formData.supplier || undefined,
+      });
+      toast.success(`"${formData.name}" added to inventory`);
+      setShowAddModal(false);
+      setFormData({ name: '', category: 'plants', quantity: '', unit: '', unit_cost: '', retail_price: '', min_stock: '', supplier: '' });
+      await refreshInventory();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to add item');
+    }
   };
 
-  const handleQuantityAdjust = (itemId: string, itemName: string, delta: number) => {
-    toast.success(`${itemName} quantity adjusted by ${delta > 0 ? '+' : ''}${delta}`);
-    void itemId;
+  const handleQuantityAdjust = async (itemId: string, itemName: string, delta: number) => {
+    try {
+      const item = inventory.find(i => i.id === itemId);
+      const newQty = (item?.quantity ?? 0) + delta;
+      await api.patch(`/inventory/${itemId}`, { quantity_on_hand: Math.max(0, newQty) });
+      toast.success(`${itemName} quantity adjusted by ${delta > 0 ? '+' : ''}${delta}`);
+      await refreshInventory();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to adjust quantity');
+    }
   };
 
   return (

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Plus, Wrench, AlertTriangle, Clock, DollarSign } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -13,7 +14,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import { format } from 'date-fns';
 
 export default function EquipmentPage() {
-  const { equipment, crews } = useData();
+  const { equipment, crews, refreshEquipment } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -34,14 +35,29 @@ export default function EquipmentPage() {
 
   const totalAssetValue = equipment.reduce((s, e) => s + (e.purchase_price || 0), 0);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.type) {
       toast.error('Name and type are required');
       return;
     }
-    toast.success(`Equipment "${formData.name}" added`);
-    setShowAddModal(false);
-    setFormData({ name: '', type: '', make: '', model: '', serial_number: '', purchase_price: '' });
+    try {
+      await api.post('/equipment', {
+        name: formData.name,
+        equipment_type: formData.type,
+        make: formData.make || undefined,
+        model: formData.model || undefined,
+        serial_number: formData.serial_number || undefined,
+        purchase_price: parseFloat(formData.purchase_price) || undefined,
+        status: 'available',
+        hours_used: 0,
+      });
+      toast.success(`Equipment "${formData.name}" added`);
+      setShowAddModal(false);
+      setFormData({ name: '', type: '', make: '', model: '', serial_number: '', purchase_price: '' });
+      await refreshEquipment();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to add equipment');
+    }
   };
 
   return (

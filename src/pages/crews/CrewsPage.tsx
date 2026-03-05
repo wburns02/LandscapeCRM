@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, UsersRound, Phone, Truck, Star } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -10,19 +11,29 @@ import Input from '../../components/ui/Input';
 import EmptyState from '../../components/ui/EmptyState';
 
 export default function CrewsPage() {
-  const { crews, jobs } = useData();
+  const { crews, jobs, refreshCrews } = useData();
   const toast = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', color: '#22c55e', vehicle: '' });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name) {
       toast.error('Crew name is required');
       return;
     }
-    toast.success(`Crew "${formData.name}" created`);
-    setShowAddModal(false);
-    setFormData({ name: '', color: '#22c55e', vehicle: '' });
+    try {
+      await api.post('/crews', {
+        name: formData.name,
+        color: formData.color,
+        is_active: true,
+      });
+      toast.success(`Crew "${formData.name}" created`);
+      setShowAddModal(false);
+      setFormData({ name: '', color: '#22c55e', vehicle: '' });
+      await refreshCrews();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create crew');
+    }
   };
 
   const getCrewActiveJobs = (crewId: string) =>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Users, Grid, List, Phone, Mail, MapPin } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Badge from '../../components/ui/Badge';
@@ -15,7 +16,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import type { Customer } from '../../types';
 
 export default function CustomersPage() {
-  const { customers } = useData();
+  const { customers, refreshCustomers } = useData();
   const navigate = useNavigate();
   const toast = useToast();
   const [search, setSearch] = useState('');
@@ -37,14 +38,33 @@ export default function CustomersPage() {
     });
   }, [customers, search, typeFilter]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.phone) {
       toast.error('Name and phone are required');
       return;
     }
-    toast.success(`Customer "${formData.name}" created`);
-    setShowAddModal(false);
-    setFormData({ name: '', email: '', phone: '', address: '', city: '', state: '', zip: '', type: 'residential' });
+    try {
+      const nameParts = formData.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      await api.post('/customers', {
+        first_name: firstName,
+        last_name: lastName,
+        email: formData.email || undefined,
+        phone: formData.phone,
+        address: formData.address || undefined,
+        city: formData.city || undefined,
+        state: formData.state || undefined,
+        zip_code: formData.zip || undefined,
+        customer_type: formData.type,
+      });
+      toast.success(`Customer "${formData.name}" created`);
+      setShowAddModal(false);
+      setFormData({ name: '', email: '', phone: '', address: '', city: '', state: '', zip: '', type: 'residential' });
+      await refreshCustomers();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create customer');
+    }
   };
 
   const typeColors: Record<string, 'green' | 'sky' | 'amber' | 'purple'> = {
