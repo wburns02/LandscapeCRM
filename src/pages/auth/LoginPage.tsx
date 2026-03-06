@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { TreePine, LogIn, Leaf } from 'lucide-react';
+import { TreePine, LogIn, Leaf, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
 
@@ -88,14 +89,24 @@ export default function LoginPage() {
               placeholder="you@company.com"
               autoComplete="email"
             />
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <Input
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(s => !s)}
+                className="absolute right-3 top-[38px] text-earth-400 hover:text-earth-200 cursor-pointer"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm text-earth-300 cursor-pointer">
                 <input type="checkbox" className="rounded border-earth-600 bg-earth-800 text-green-600" />
