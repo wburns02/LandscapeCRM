@@ -50,12 +50,12 @@ export default function LoginPage() {
           </div>
           <h1 className="text-4xl font-bold font-display text-white">Maas Verde</h1>
           <p className="text-lg text-green-200/80">
-            Landscape restoration management. Schedule crews, track inventory, create quotes, and grow your business.
+            Professional landscape restoration management. Schedule crews, manage projects, track inventory, and streamline your operations.
           </p>
           <div className="grid grid-cols-2 gap-4 mt-8 text-left">
             {[
-              'Job Scheduling', 'Crew Management', 'Inventory Tracking', 'Invoicing',
-              'Quote Builder', 'Lead Pipeline', 'Equipment Tracker', 'Reports',
+              'Job Scheduling', 'Crew Management', 'Plant Inventory', 'Invoicing',
+              'Quote Builder', 'Lead Pipeline', 'Equipment Tracker', 'Project Reports',
             ].map(feature => (
               <div key={feature} className="flex items-center gap-2 text-green-200/70 text-sm">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400" />

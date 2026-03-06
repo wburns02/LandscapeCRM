@@ -1,29 +1,31 @@
 @import "tailwindcss";
 
 @theme {
-  --color-green-50: #f0fdf4;
-  --color-green-100: #dcfce7;
-  --color-green-200: #bbf7d0;
-  --color-green-300: #86efac;
-  --color-green-400: #4ade80;
-  --color-green-500: #22c55e;
-  --color-green-600: #16a34a;
-  --color-green-700: #15803d;
-  --color-green-800: #166534;
-  --color-green-900: #14532d;
-  --color-green-950: #052e16;
+  /* Maas Verde brand olive/sage green — derived from rgb(101,125,29) #657D1D */
+  --color-green-50: #f6f8ee;
+  --color-green-100: #e8edcf;
+  --color-green-200: #d1dba2;
+  --color-green-300: #b3c36e;
+  --color-green-400: #93a74a;
+  --color-green-500: #7a8f35;
+  --color-green-600: #657d1d;
+  --color-green-700: #4e6318;
+  --color-green-800: #3d4e15;
+  --color-green-900: #2e3b11;
+  --color-green-950: #1a2209;
 
-  --color-earth-50: #faf8f5;
-  --color-earth-100: #f0ebe3;
-  --color-earth-200: #e2d5c5;
-  --color-earth-300: #cdb89e;
-  --color-earth-400: #b89a78;
-  --color-earth-500: #a68360;
-  --color-earth-600: #8d6d4e;
-  --color-earth-700: #745841;
-  --color-earth-800: #5e4838;
-  --color-earth-900: #4d3c30;
-  --color-earth-950: #2a1f18;
+  /* Warm dark palette — from Maas Verde #171716, #474746 */
+  --color-earth-50: #f7f6f4;
+  --color-earth-100: #ebe9e4;
+  --color-earth-200: #d6d3cb;
+  --color-earth-300: #b5b1a5;
+  --color-earth-400: #918b7d;
+  --color-earth-500: #747069;
+  --color-earth-600: #636360;
+  --color-earth-700: #4d4d4a;
+  --color-earth-800: #353533;
+  --color-earth-900: #252524;
+  --color-earth-950: #171716;
 
   --color-sky-50: #f0f9ff;
   --color-sky-100: #e0f2fe;
@@ -46,8 +48,8 @@
   --color-red-500: #ef4444;
   --color-red-600: #dc2626;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-sans: 'Lexend', 'Inter', system-ui, sans-serif;
+  --font-display: 'Lexend', 'Outfit', system-ui, sans-serif;
 }
 
 body {
@@ -57,7 +59,7 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(166,131,96,0.3) transparent;
+  scrollbar-color: rgba(101,125,29,0.3) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -67,6 +69,6 @@ body {
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: rgba(166,131,96,0.3);
+  background-color: rgba(101,125,29,0.3);
   border-radius: 3px;
 }
