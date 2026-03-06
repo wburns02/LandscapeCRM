@@ -26,18 +26,19 @@ const statusTabs: { key: '' | JobStatus; label: string }[] = [
 ];
 
 const jobTypeOptions: { value: JobType; label: string }[] = [
-  { value: 'mowing', label: 'Mowing' },
-  { value: 'landscaping', label: 'Landscaping' },
+  { value: 'landscape_design', label: 'Landscape Design' },
+  { value: 'construction', label: 'Construction' },
+  { value: 'landscape_maintenance', label: 'Landscape Maintenance' },
   { value: 'irrigation', label: 'Irrigation' },
-  { value: 'tree_service', label: 'Tree Service' },
-  { value: 'hardscape', label: 'Hardscape' },
-  { value: 'planting', label: 'Planting' },
-  { value: 'cleanup', label: 'Cleanup' },
-  { value: 'fertilization', label: 'Fertilization' },
-  { value: 'pest_control', label: 'Pest Control' },
-  { value: 'snow_removal', label: 'Snow Removal' },
-  { value: 'design', label: 'Design' },
-  { value: 'maintenance', label: 'Maintenance' },
+  { value: 'carpentry', label: 'Carpentry' },
+  { value: 'invasive_vegetation', label: 'Invasive Vegetation' },
+  { value: 'steel_fabrication', label: 'Steel Fabrication' },
+  { value: 'masonry', label: 'Masonry' },
+  { value: 'tree_trimming', label: 'Tree Trimming' },
+  { value: 'outdoor_lighting', label: 'Outdoor Lighting' },
+  { value: 'erosion_control', label: 'Erosion Control' },
+  { value: 'earthwork', label: 'Earthwork' },
+  { value: 'stream_reclamation', label: 'Stream Reclamation' },
   { value: 'other', label: 'Other' },
 ];
 
@@ -49,7 +50,7 @@ export default function JobsPage() {
   const [statusFilter, setStatusFilter] = useState<'' | JobStatus>('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({
-    title: '', customer_id: '', type: 'mowing' as JobType, crew_id: '',
+    title: '', customer_id: '', type: 'landscape_design' as JobType, crew_id: '',
     scheduled_date: '', estimated_hours: '2', total_price: '',
   });
 
@@ -81,7 +82,7 @@ export default function JobsPage() {
       });
       toast.success(`Job "${formData.title}" created`);
       setShowAddModal(false);
-      setFormData({ title: '', customer_id: '', type: 'mowing', crew_id: '', scheduled_date: '', estimated_hours: '2', total_price: '' });
+      setFormData({ title: '', customer_id: '', type: 'landscape_design', crew_id: '', scheduled_date: '', estimated_hours: '2', total_price: '' });
       await refreshJobs();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create job');
@@ -89,9 +90,11 @@ export default function JobsPage() {
   };
 
   const typeColor: Record<string, string> = {
-    mowing: 'text-green-400', landscaping: 'text-green-300', hardscape: 'text-earth-300',
-    tree_service: 'text-amber-400', irrigation: 'text-sky-400', planting: 'text-green-400',
-    cleanup: 'text-earth-300', fertilization: 'text-amber-300', pest_control: 'text-red-400',
+    landscape_design: 'text-green-400', construction: 'text-earth-300', landscape_maintenance: 'text-green-300',
+    irrigation: 'text-sky-400', carpentry: 'text-amber-300', invasive_vegetation: 'text-red-400',
+    steel_fabrication: 'text-earth-200', masonry: 'text-earth-300', tree_trimming: 'text-amber-400',
+    outdoor_lighting: 'text-amber-200', erosion_control: 'text-sky-300', earthwork: 'text-earth-400',
+    stream_reclamation: 'text-sky-400',
   };
 
   return (

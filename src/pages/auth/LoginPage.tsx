@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { TreePine, LogIn, Leaf, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Leaf, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
@@ -45,17 +45,14 @@ export default function LoginPage() {
           <div className="absolute top-1/2 left-1/3"><Leaf className="w-16 h-16 text-green-300 rotate-90" /></div>
         </div>
         <div className="relative text-center space-y-6 max-w-md">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-white/10 rounded-3xl backdrop-blur-sm">
-            <TreePine className="w-14 h-14 text-green-300" />
-          </div>
-          <h1 className="text-4xl font-bold font-display text-white">Maas Verde</h1>
+          <img src="/logo-vertical.png" alt="Maas Verde Landscape Restoration" className="w-64 mx-auto" />
           <p className="text-lg text-green-200/80">
             Professional landscape restoration management. Schedule crews, manage projects, track inventory, and streamline your operations.
           </p>
           <div className="grid grid-cols-2 gap-4 mt-8 text-left">
             {[
-              'Job Scheduling', 'Crew Management', 'Plant Inventory', 'Invoicing',
-              'Quote Builder', 'Lead Pipeline', 'Equipment Tracker', 'Project Reports',
+              'Job Scheduling', 'Crew Management', 'Erosion Control', 'Invoicing',
+              'Stream Reclamation', 'Lead Pipeline', 'Equipment Tracker', 'Project Reports',
             ].map(feature => (
               <div key={feature} className="flex items-center gap-2 text-green-200/70 text-sm">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
@@ -71,9 +68,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm space-y-8">
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
-              <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center lg:hidden">
-                <TreePine className="w-6 h-6 text-white" />
-              </div>
+              <img src="/logo-icon.png" alt="Maas Verde" className="w-10 h-10 lg:hidden" />
               <span className="text-xl font-bold font-display text-earth-50 lg:hidden">Maas Verde CRM</span>
             </div>
             <h2 className="text-2xl font-bold font-display text-earth-50">Welcome back</h2>

@@ -42,7 +42,7 @@ export interface Customer {
 }
 
 export type JobStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold' | 'pending';
-export type JobType = 'mowing' | 'landscaping' | 'irrigation' | 'tree_service' | 'hardscape' | 'planting' | 'cleanup' | 'fertilization' | 'pest_control' | 'snow_removal' | 'design' | 'maintenance' | 'other';
+export type JobType = 'landscape_design' | 'construction' | 'landscape_maintenance' | 'irrigation' | 'carpentry' | 'invasive_vegetation' | 'steel_fabrication' | 'masonry' | 'tree_trimming' | 'outdoor_lighting' | 'erosion_control' | 'earthwork' | 'stream_reclamation' | 'other';
 
 export interface Job {
   id: string;

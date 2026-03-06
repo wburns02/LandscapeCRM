@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Briefcase, Calendar, Package, FileText,
   Receipt, FileSignature, UsersRound, Wrench, Target, Camera,
-  BarChart3, Settings, TreePine, Menu, X, ChevronLeft,
+  BarChart3, Settings, Menu, X, ChevronLeft,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -35,9 +35,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const sidebarContent = (
     <>
       <div className="flex items-center gap-3 px-4 py-5 border-b border-earth-800/60">
-        <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-xl shrink-0">
-          <TreePine className="w-6 h-6 text-white" />
-        </div>
+        <img src="/logo-icon.png" alt="Maas Verde" className="w-10 h-10 shrink-0" />
         {!collapsed && (
           <div className="overflow-hidden">
             <h1 className="text-lg font-bold font-display text-earth-50 whitespace-nowrap">Maas Verde</h1>

@@ -15,18 +15,19 @@ import { useState } from 'react';
 import type { JobType } from '../../types';
 
 const jobTypeOptions: { value: JobType; label: string }[] = [
-  { value: 'mowing', label: 'Mowing' },
-  { value: 'landscaping', label: 'Landscaping' },
+  { value: 'landscape_design', label: 'Landscape Design' },
+  { value: 'construction', label: 'Construction' },
+  { value: 'landscape_maintenance', label: 'Landscape Maintenance' },
   { value: 'irrigation', label: 'Irrigation' },
-  { value: 'tree_service', label: 'Tree Service' },
-  { value: 'hardscape', label: 'Hardscape' },
-  { value: 'planting', label: 'Planting' },
-  { value: 'cleanup', label: 'Cleanup' },
-  { value: 'fertilization', label: 'Fertilization' },
-  { value: 'pest_control', label: 'Pest Control' },
-  { value: 'snow_removal', label: 'Snow Removal' },
-  { value: 'design', label: 'Design' },
-  { value: 'maintenance', label: 'Maintenance' },
+  { value: 'carpentry', label: 'Carpentry' },
+  { value: 'invasive_vegetation', label: 'Invasive Vegetation' },
+  { value: 'steel_fabrication', label: 'Steel Fabrication' },
+  { value: 'masonry', label: 'Masonry' },
+  { value: 'tree_trimming', label: 'Tree Trimming' },
+  { value: 'outdoor_lighting', label: 'Outdoor Lighting' },
+  { value: 'erosion_control', label: 'Erosion Control' },
+  { value: 'earthwork', label: 'Earthwork' },
+  { value: 'stream_reclamation', label: 'Stream Reclamation' },
   { value: 'other', label: 'Other' },
 ];
 
@@ -43,7 +44,7 @@ export default function JobDetailPage() {
   const job = jobs.find(j => j.id === id);
 
   const [editData, setEditData] = useState({
-    title: '', type: 'mowing' as JobType, crew_id: '',
+    title: '', type: 'landscape_design' as JobType, crew_id: '',
     scheduled_date: '', scheduled_time: '', estimated_hours: '',
     total_price: '', materials_cost: '', labor_cost: '',
     description: '', notes: '',
