@@ -135,7 +135,7 @@ export default function SettingsPage() {
                 <div className="w-9 h-9 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">A</div>
                 <div>
                   <p className="text-sm font-medium text-earth-100">Admin User</p>
-                  <p className="text-xs text-earth-400">admin@greenscape.com</p>
+                  <p className="text-xs text-earth-400">admin@maasverde.com</p>
                 </div>
               </div>
               <span className="px-2 py-0.5 bg-green-600/15 text-green-400 text-xs rounded-full">Admin</span>
@@ -145,7 +145,7 @@ export default function SettingsPage() {
                 <div className="w-9 h-9 bg-sky-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">M</div>
                 <div>
                   <p className="text-sm font-medium text-earth-100">Manager User</p>
-                  <p className="text-xs text-earth-400">manager@greenscape.com</p>
+                  <p className="text-xs text-earth-400">manager@maasverde.com</p>
                 </div>
               </div>
               <span className="px-2 py-0.5 bg-sky-600/15 text-sky-400 text-xs rounded-full">Manager</span>

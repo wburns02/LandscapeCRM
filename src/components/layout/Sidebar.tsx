@@ -40,8 +40,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
-            <h1 className="text-lg font-bold font-display text-earth-50 whitespace-nowrap">GreenScape</h1>
-            <p className="text-[10px] text-green-400 uppercase tracking-widest">Landscape CRM</p>
+            <h1 className="text-lg font-bold font-display text-earth-50 whitespace-nowrap">Maas Verde</h1>
+            <p className="text-[10px] text-green-400 uppercase tracking-widest">Landscape Restoration</p>
           </div>
         )}
       </div>

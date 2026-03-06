@@ -266,8 +266,8 @@ function getDemoData(): {
   };
 
   const settings: SystemSettings = {
-    company_name: 'GreenScape Landscaping',
-    company_email: 'info@greenscape.com',
+    company_name: 'Maas Verde Landscape Restoration',
+    company_email: 'info@maasverde.com',
     company_phone: '(512) 555-0000',
     company_address: '4500 Landscape Way, Austin, TX 78745',
     tax_rate: 8.25,

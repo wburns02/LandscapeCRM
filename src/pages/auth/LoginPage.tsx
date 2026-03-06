@@ -48,9 +48,9 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-24 h-24 bg-white/10 rounded-3xl backdrop-blur-sm">
             <TreePine className="w-14 h-14 text-green-300" />
           </div>
-          <h1 className="text-4xl font-bold font-display text-white">GreenScape CRM</h1>
+          <h1 className="text-4xl font-bold font-display text-white">Maas Verde</h1>
           <p className="text-lg text-green-200/80">
-            Professional landscape and nursery management. Schedule crews, track inventory, create quotes, and grow your business.
+            Landscape restoration management. Schedule crews, track inventory, create quotes, and grow your business.
           </p>
           <div className="grid grid-cols-2 gap-4 mt-8 text-left">
             {[
@@ -74,10 +74,10 @@ export default function LoginPage() {
               <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center lg:hidden">
                 <TreePine className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold font-display text-earth-50 lg:hidden">GreenScape CRM</span>
+              <span className="text-xl font-bold font-display text-earth-50 lg:hidden">Maas Verde CRM</span>
             </div>
             <h2 className="text-2xl font-bold font-display text-earth-50">Welcome back</h2>
-            <p className="text-sm text-earth-400 mt-1">Sign in to manage your landscape operations</p>
+            <p className="text-sm text-earth-400 mt-1">Sign in to manage your restoration operations</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -122,7 +122,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-xs text-earth-500">
-            GreenScape CRM v1.0.0
+            Maas Verde CRM v1.0.0
           </p>
         </div>
       </div>

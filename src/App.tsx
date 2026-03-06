@@ -45,7 +45,7 @@ function AppLayout() {
   const location = useLocation();
 
   const baseRoute = '/' + (location.pathname.split('/')[1] || '');
-  const title = pageTitles[baseRoute] || 'GreenScape CRM';
+  const title = pageTitles[baseRoute] || 'Maas Verde CRM';
 
   return (
     <div className="flex min-h-screen bg-earth-950">

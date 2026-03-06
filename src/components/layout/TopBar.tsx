@@ -56,15 +56,15 @@ export default function TopBar({ title }: TopBarProps) {
                 {user?.name?.charAt(0) || 'G'}
               </div>
               <span className="hidden sm:block text-sm text-earth-200 font-medium">
-                {user?.name || 'GreenScape Admin'}
+                {user?.name || 'Maas Verde Admin'}
               </span>
             </button>
 
             {showUserMenu && (
               <div className="absolute right-0 top-full mt-2 w-48 bg-earth-900 border border-earth-700 rounded-xl shadow-xl py-1 overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-earth-800">
-                  <p className="text-sm font-medium text-earth-100">{user?.name || 'GreenScape Admin'}</p>
-                  <p className="text-xs text-earth-400">{user?.email || 'admin@greenscape.com'}</p>
+                  <p className="text-sm font-medium text-earth-100">{user?.name || 'Maas Verde Admin'}</p>
+                  <p className="text-xs text-earth-400">{user?.email || 'admin@maasverde.com'}</p>
                 </div>
                 <button
                   onClick={() => { setShowUserMenu(false); }}
