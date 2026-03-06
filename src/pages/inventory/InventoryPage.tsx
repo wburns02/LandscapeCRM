@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Package, AlertTriangle, Minus } from 'lucide-react';
+import { Plus, Package, AlertTriangle, Minus, Save, Edit2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
 import api from '../../api/client';
@@ -11,7 +11,7 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import EmptyState from '../../components/ui/EmptyState';
-import type { InventoryCategory } from '../../types';
+import type { InventoryItem, InventoryCategory } from '../../types';
 
 const categories: { key: '' | InventoryCategory; label: string }[] = [
   { key: '', label: 'All' },
@@ -36,6 +36,14 @@ export default function InventoryPage() {
     name: '', category: 'plants' as InventoryCategory, quantity: '', unit: '',
     unit_cost: '', retail_price: '', min_stock: '', supplier: '',
   });
+
+  // Edit modal state
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '', category: 'plants' as InventoryCategory, quantity: '', unit: '',
+    unit_cost: '', retail_price: '', min_stock: '', supplier: '',
+  });
+  const [isSaving, setIsSaving] = useState(false);
 
   const lowStockItems = useMemo(() => inventory.filter(i => (i.quantity ?? 0) <= (i.min_stock ?? 0)), [inventory]);
 
@@ -73,7 +81,8 @@ export default function InventoryPage() {
     }
   };
 
-  const handleQuantityAdjust = async (itemId: string, itemName: string, delta: number) => {
+  const handleQuantityAdjust = async (e: React.MouseEvent, itemId: string, itemName: string, delta: number) => {
+    e.stopPropagation();
     try {
       const item = inventory.find(i => i.id === itemId);
       const newQty = (item?.quantity ?? 0) + delta;
@@ -82,6 +91,44 @@ export default function InventoryPage() {
       await refreshInventory();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to adjust quantity');
+    }
+  };
+
+  const openEditModal = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setEditForm({
+      name: item.name,
+      category: item.category,
+      quantity: String(item.quantity ?? 0),
+      unit: item.unit,
+      unit_cost: String(item.unit_cost ?? 0),
+      retail_price: String(item.retail_price ?? 0),
+      min_stock: String(item.min_stock ?? 0),
+      supplier: item.supplier || '',
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!selectedItem) return;
+    setIsSaving(true);
+    try {
+      await api.patch(`/inventory/${selectedItem.id}`, {
+        name: editForm.name,
+        category: editForm.category,
+        unit: editForm.unit,
+        quantity_on_hand: parseFloat(editForm.quantity) || 0,
+        unit_cost: parseFloat(editForm.unit_cost) || 0,
+        unit_price: parseFloat(editForm.retail_price) || 0,
+        reorder_level: parseFloat(editForm.min_stock) || 0,
+        supplier_name: editForm.supplier || undefined,
+      });
+      toast.success(`"${editForm.name}" updated`);
+      setSelectedItem(null);
+      await refreshInventory();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update item');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -141,13 +188,19 @@ export default function InventoryPage() {
             const isLow = (item.quantity ?? 0) <= (item.min_stock ?? 0);
             return (
               <Card key={item.id}>
-                <div className="space-y-3">
+                <div
+                  className="space-y-3 cursor-pointer hover:ring-2 hover:ring-green-500/30 rounded-lg transition-all -m-1 p-1"
+                  onClick={() => openEditModal(item)}
+                >
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold text-earth-100">{item.name}</h3>
                       {item.sku && <p className="text-xs text-earth-500">SKU: {item.sku}</p>}
                     </div>
-                    <Badge color={isLow ? 'red' : 'green'}>{item.category}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Edit2 className="w-3.5 h-3.5 text-earth-500" />
+                      <Badge color={isLow ? 'red' : 'green'}>{item.category}</Badge>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
@@ -158,13 +211,13 @@ export default function InventoryPage() {
                     </div>
                     <div className="flex items-center gap-1">
                       <button
-                        onClick={() => handleQuantityAdjust(item.id, item.name, -1)}
+                        onClick={(e) => handleQuantityAdjust(e, item.id, item.name, -1)}
                         className="w-9 h-9 flex items-center justify-center rounded-lg bg-earth-800 hover:bg-earth-700 text-earth-300 cursor-pointer"
                       >
                         <Minus className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleQuantityAdjust(item.id, item.name, 1)}
+                        onClick={(e) => handleQuantityAdjust(e, item.id, item.name, 1)}
                         className="w-9 h-9 flex items-center justify-center rounded-lg bg-earth-800 hover:bg-earth-700 text-earth-300 cursor-pointer"
                       >
                         <Plus className="w-4 h-4" />
@@ -183,6 +236,7 @@ export default function InventoryPage() {
         </div>
       )}
 
+      {/* Add Item Modal */}
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
@@ -207,6 +261,64 @@ export default function InventoryPage() {
           <Input label="Retail Price" type="number" value={formData.retail_price} onChange={e => setFormData(f => ({ ...f, retail_price: e.target.value }))} placeholder="0.00" />
           <Input label="Min Stock Level" type="number" value={formData.min_stock} onChange={e => setFormData(f => ({ ...f, min_stock: e.target.value }))} placeholder="10" />
         </div>
+      </Modal>
+
+      {/* Edit Item Modal */}
+      <Modal
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        title={`Edit: ${selectedItem?.name || 'Item'}`}
+        size="lg"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setSelectedItem(null)}>Cancel</Button>
+            <Button onClick={handleEditSave} loading={isSaving} icon={<Save className="w-4 h-4" />}>Save Changes</Button>
+          </>
+        }
+      >
+        {selectedItem && (
+          <div className="space-y-5">
+            {/* Quick Stock Adjust */}
+            <div className="p-4 rounded-xl bg-earth-800/30 border border-earth-800/50">
+              <p className="text-xs font-medium text-earth-300 mb-3">Quick Stock Adjustment</p>
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  onClick={() => setEditForm(f => ({ ...f, quantity: String(Math.max(0, (parseFloat(f.quantity) || 0) - 10)) }))}
+                  className="px-3 py-2 rounded-lg bg-earth-800 hover:bg-earth-700 text-earth-300 text-sm font-medium cursor-pointer"
+                >-10</button>
+                <button
+                  onClick={() => setEditForm(f => ({ ...f, quantity: String(Math.max(0, (parseFloat(f.quantity) || 0) - 1)) }))}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg bg-earth-800 hover:bg-earth-700 text-earth-300 cursor-pointer"
+                ><Minus className="w-4 h-4" /></button>
+                <div className="text-center min-w-[80px]">
+                  <p className="text-3xl font-bold text-earth-50">{editForm.quantity}</p>
+                  <p className="text-xs text-earth-400">{editForm.unit}</p>
+                </div>
+                <button
+                  onClick={() => setEditForm(f => ({ ...f, quantity: String((parseFloat(f.quantity) || 0) + 1) }))}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg bg-earth-800 hover:bg-earth-700 text-earth-300 cursor-pointer"
+                ><Plus className="w-4 h-4" /></button>
+                <button
+                  onClick={() => setEditForm(f => ({ ...f, quantity: String((parseFloat(f.quantity) || 0) + 10) }))}
+                  className="px-3 py-2 rounded-lg bg-earth-800 hover:bg-earth-700 text-earth-300 text-sm font-medium cursor-pointer"
+                >+10</button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <Input label="Item Name" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+              <Select label="Category" options={categories.filter(c => c.key).map(c => ({ value: c.key, label: c.label }))} value={editForm.category} onChange={e => setEditForm(f => ({ ...f, category: e.target.value as InventoryCategory }))} />
+              <Input label="Supplier" value={editForm.supplier} onChange={e => setEditForm(f => ({ ...f, supplier: e.target.value }))} />
+              <Input label="Quantity" type="number" value={editForm.quantity} onChange={e => setEditForm(f => ({ ...f, quantity: e.target.value }))} />
+              <Input label="Unit" value={editForm.unit} onChange={e => setEditForm(f => ({ ...f, unit: e.target.value }))} />
+              <Input label="Unit Cost ($)" type="number" value={editForm.unit_cost} onChange={e => setEditForm(f => ({ ...f, unit_cost: e.target.value }))} />
+              <Input label="Retail Price ($)" type="number" value={editForm.retail_price} onChange={e => setEditForm(f => ({ ...f, retail_price: e.target.value }))} />
+              <Input label="Min Stock Level" type="number" value={editForm.min_stock} onChange={e => setEditForm(f => ({ ...f, min_stock: e.target.value }))} />
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
