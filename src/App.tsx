@@ -19,6 +19,8 @@ import ContractsPage from './pages/contracts/ContractsPage';
 import CrewsPage from './pages/crews/CrewsPage';
 import EquipmentPage from './pages/equipment/EquipmentPage';
 import LeadsPage from './pages/marketing/LeadsPage';
+import ProspectsPage from './pages/marketing/ProspectsPage';
+import CampaignsPage from './pages/marketing/CampaignsPage';
 import PhotosPage from './pages/photos/PhotosPage';
 import ReportsPage from './pages/reports/ReportsPage';
 import SettingsPage from './pages/settings/SettingsPage';
@@ -35,6 +37,8 @@ const pageTitles: Record<string, string> = {
   '/crews': 'Crews',
   '/equipment': 'Equipment',
   '/leads': 'Leads',
+  '/prospects': 'Prospects',
+  '/campaigns': 'Campaigns',
   '/photos': 'Photos',
   '/reports': 'Reports',
   '/settings': 'Settings',
@@ -67,6 +71,8 @@ function AppLayout() {
             <Route path="/crews" element={<CrewsPage />} />
             <Route path="/equipment" element={<EquipmentPage />} />
             <Route path="/leads" element={<LeadsPage />} />
+            <Route path="/prospects" element={<ProspectsPage />} />
+            <Route path="/campaigns" element={<CampaignsPage />} />
             <Route path="/photos" element={<PhotosPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />

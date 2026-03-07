@@ -444,6 +444,113 @@ export function getInventoryMinStock(i: InventoryItem): number {
   return i.min_stock ?? i.reorder_level ?? 0;
 }
 
+// --- Prospects ---
+
+export type ProspectStatus = 'new' | 'contacted' | 'qualified' | 'do_not_contact';
+export type EmailStatus = 'unknown' | 'valid' | 'invalid' | 'unsubscribed' | 'bounced';
+
+export interface Prospect {
+  id: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  phone: string;
+  phone_2?: string;
+  email?: string;
+  address: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  property_value?: number;
+  sqft?: number;
+  year_built?: number;
+  work_type?: string;
+  lead_score?: number;
+  source?: string;
+  import_batch?: string;
+  status: ProspectStatus;
+  email_status: EmailStatus;
+  last_contacted_at?: string;
+  last_emailed_at?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProspectListResponse {
+  items: Prospect[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ProspectStats {
+  total: number;
+  by_city: { city: string; count: number }[];
+  by_work_type: { work_type: string; count: number }[];
+  by_status: { status: string; count: number }[];
+  avg_lead_score: number;
+  avg_property_value: number;
+}
+
+// --- Email Campaigns ---
+
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  html_body: string;
+  text_body?: string;
+  category?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmailCampaign {
+  id: string;
+  name: string;
+  template_id?: string;
+  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'paused';
+  send_at?: string;
+  sent_count: number;
+  open_count: number;
+  click_count: number;
+  bounce_count: number;
+  recipient_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CampaignStats {
+  id: string;
+  name: string;
+  status: string;
+  total_recipients: number;
+  sent: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  open_rate: number;
+  click_rate: number;
+  bounce_rate: number;
+}
+
+export interface SegmentRecommendation {
+  segment_name: string;
+  description: string;
+  prospect_count: number;
+  avg_lead_score: number;
+  avg_property_value: number;
+  suggested_template: string;
+}
+
+export interface AIRecommendations {
+  segments: SegmentRecommendation[];
+  best_send_times: string[];
+  cadence: string[];
+  total_unreached: number;
+}
+
 export function getContractServiceName(s: string | ContractService): string {
   return typeof s === 'string' ? s : s.description ?? '';
 }
