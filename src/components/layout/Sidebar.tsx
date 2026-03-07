@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Briefcase, Calendar, Package, FileText,
   Receipt, FileSignature, UsersRound, Wrench, Target, UserSearch, Mail,
-  Camera, BarChart3, Settings, Menu, X, ChevronLeft,
+  Send, Camera, BarChart3, Settings, Menu, X, ChevronLeft,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -21,6 +21,7 @@ const navItems = [
   { to: '/leads', icon: Target, label: 'Leads' },
   { to: '/prospects', icon: UserSearch, label: 'Prospects' },
   { to: '/campaigns', icon: Mail, label: 'Campaigns' },
+  { to: '/direct-mail', icon: Send, label: 'Direct Mail' },
   { to: '/photos', icon: Camera, label: 'Photos' },
   { to: '/reports', icon: BarChart3, label: 'Reports' },
   { to: '/settings', icon: Settings, label: 'Settings' },

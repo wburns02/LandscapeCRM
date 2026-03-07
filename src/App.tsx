@@ -21,6 +21,7 @@ import EquipmentPage from './pages/equipment/EquipmentPage';
 import LeadsPage from './pages/marketing/LeadsPage';
 import ProspectsPage from './pages/marketing/ProspectsPage';
 import CampaignsPage from './pages/marketing/CampaignsPage';
+import DirectMailPage from './pages/marketing/DirectMailPage';
 import PhotosPage from './pages/photos/PhotosPage';
 import ReportsPage from './pages/reports/ReportsPage';
 import SettingsPage from './pages/settings/SettingsPage';
@@ -39,6 +40,7 @@ const pageTitles: Record<string, string> = {
   '/leads': 'Leads',
   '/prospects': 'Prospects',
   '/campaigns': 'Campaigns',
+  '/direct-mail': 'Direct Mail',
   '/photos': 'Photos',
   '/reports': 'Reports',
   '/settings': 'Settings',
@@ -73,6 +75,7 @@ function AppLayout() {
             <Route path="/leads" element={<LeadsPage />} />
             <Route path="/prospects" element={<ProspectsPage />} />
             <Route path="/campaigns" element={<CampaignsPage />} />
+            <Route path="/direct-mail" element={<DirectMailPage />} />
             <Route path="/photos" element={<PhotosPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />

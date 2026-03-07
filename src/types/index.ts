@@ -554,3 +554,51 @@ export interface AIRecommendations {
 export function getContractServiceName(s: string | ContractService): string {
   return typeof s === 'string' ? s : s.description ?? '';
 }
+
+// --- Direct Mail ---
+
+export type DirectMailStatus = 'draft' | 'ready' | 'sent_to_printer' | 'printed' | 'mailed' | 'delivered';
+export type MailType = 'postcard' | 'letter';
+export type MailSize = '6x4' | '6x9' | '8.5x11';
+
+export interface MailTemplate {
+  id: string;
+  name: string;
+  mail_type: MailType;
+  size: MailSize;
+  front_html: string;
+  back_html?: string;
+  category?: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DirectMailCampaign {
+  id: string;
+  name: string;
+  template_id?: string;
+  mail_type: string;
+  status: DirectMailStatus;
+  recipient_count: number;
+  estimated_cost?: number;
+  cost_per_piece?: number;
+  print_vendor?: string;
+  tracking_number?: string;
+  notes?: string;
+  sent_to_printer_at?: string;
+  mailed_at?: string;
+  delivered_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DirectMailRecipient {
+  id: string;
+  full_name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code?: string;
+  status: string;
+}
