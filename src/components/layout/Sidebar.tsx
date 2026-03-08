@@ -1,30 +1,72 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Briefcase, Calendar, Package, FileText,
   Receipt, FileSignature, UsersRound, Wrench, Target, UserSearch, Mail,
-  Send, Camera, BarChart3, Settings, Menu, X, ChevronLeft,
+  Send, Camera, BarChart3, Settings, Menu, X, ChevronLeft, ChevronDown,
+  type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/customers', icon: Users, label: 'Customers' },
-  { to: '/jobs', icon: Briefcase, label: 'Jobs' },
-  { to: '/schedule', icon: Calendar, label: 'Schedule' },
-  { to: '/inventory', icon: Package, label: 'Inventory' },
-  { to: '/quotes', icon: FileText, label: 'Quotes' },
-  { to: '/invoices', icon: Receipt, label: 'Invoices' },
-  { to: '/contracts', icon: FileSignature, label: 'Contracts' },
-  { to: '/crews', icon: UsersRound, label: 'Crews' },
-  { to: '/equipment', icon: Wrench, label: 'Equipment' },
-  { to: '/leads', icon: Target, label: 'Leads' },
-  { to: '/prospects', icon: UserSearch, label: 'Prospects' },
-  { to: '/campaigns', icon: Mail, label: 'Campaigns' },
-  { to: '/direct-mail', icon: Send, label: 'Direct Mail' },
-  { to: '/photos', icon: Camera, label: 'Photos' },
-  { to: '/reports', icon: BarChart3, label: 'Reports' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+interface NavItem {
+  to: string;
+  icon: LucideIcon;
+  label: string;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    title: '',
+    items: [
+      { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    ],
+  },
+  {
+    title: 'Operations',
+    items: [
+      { to: '/customers', icon: Users, label: 'Customers' },
+      { to: '/jobs', icon: Briefcase, label: 'Jobs' },
+      { to: '/schedule', icon: Calendar, label: 'Schedule' },
+      { to: '/crews', icon: UsersRound, label: 'Crews' },
+    ],
+  },
+  {
+    title: 'Financial',
+    items: [
+      { to: '/quotes', icon: FileText, label: 'Quotes' },
+      { to: '/invoices', icon: Receipt, label: 'Invoices' },
+      { to: '/contracts', icon: FileSignature, label: 'Contracts' },
+    ],
+  },
+  {
+    title: 'Marketing',
+    items: [
+      { to: '/leads', icon: Target, label: 'Leads' },
+      { to: '/prospects', icon: UserSearch, label: 'Prospects' },
+      { to: '/campaigns', icon: Mail, label: 'Campaigns' },
+      { to: '/direct-mail', icon: Send, label: 'Direct Mail' },
+    ],
+  },
+  {
+    title: 'Assets',
+    items: [
+      { to: '/inventory', icon: Package, label: 'Inventory' },
+      { to: '/equipment', icon: Wrench, label: 'Equipment' },
+      { to: '/photos', icon: Camera, label: 'Photos' },
+    ],
+  },
+  {
+    title: '',
+    items: [
+      { to: '/reports', icon: BarChart3, label: 'Reports' },
+      { to: '/settings', icon: Settings, label: 'Settings' },
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -34,6 +76,17 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (title: string) => {
+    setCollapsedSections(prev => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  const isSectionActive = (section: NavSection) =>
+    section.items.some(item =>
+      item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)
+    );
 
   const sidebarContent = (
     <>
@@ -47,28 +100,60 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-        {navItems.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            onClick={() => setMobileOpen(false)}
-            className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
-                'min-h-[44px]',
-                isActive
-                  ? 'bg-green-600/15 text-green-400 border border-green-500/20'
-                  : 'text-earth-300 hover:text-earth-100 hover:bg-earth-800/60 border border-transparent',
-                collapsed && 'justify-center px-0'
-              )
-            }
-          >
-            <Icon className="w-5 h-5 shrink-0" />
-            {!collapsed && <span className="truncate">{label}</span>}
-          </NavLink>
-        ))}
+      <nav className="flex-1 overflow-y-auto py-2 px-2">
+        {navSections.map((section, sIdx) => {
+          const isCollapsed = collapsedSections[section.title] && !isSectionActive(section);
+          const hasTitle = section.title !== '';
+
+          return (
+            <div key={section.title || `section-${sIdx}`} className={clsx(hasTitle && 'mt-3')}>
+              {hasTitle && !collapsed && (
+                <button
+                  onClick={() => toggleSection(section.title)}
+                  className="flex items-center justify-between w-full px-3 py-1.5 mb-0.5 cursor-pointer group"
+                >
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-earth-500 group-hover:text-earth-400 transition-colors">
+                    {section.title}
+                  </span>
+                  <ChevronDown
+                    className={clsx(
+                      'w-3 h-3 text-earth-600 group-hover:text-earth-400 transition-all',
+                      isCollapsed && '-rotate-90'
+                    )}
+                  />
+                </button>
+              )}
+              {hasTitle && collapsed && (
+                <div className="mx-3 my-2 border-t border-earth-800/60" />
+              )}
+              {(!hasTitle || !isCollapsed) && (
+                <div className="space-y-0.5">
+                  {section.items.map(({ to, icon: Icon, label }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      end={to === '/'}
+                      onClick={() => setMobileOpen(false)}
+                      className={({ isActive }) =>
+                        clsx(
+                          'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
+                          'min-h-[40px]',
+                          isActive
+                            ? 'bg-green-600/15 text-green-400 border border-green-500/20'
+                            : 'text-earth-300 hover:text-earth-100 hover:bg-earth-800/60 border border-transparent',
+                          collapsed && 'justify-center px-0'
+                        )
+                      }
+                    >
+                      <Icon className="w-[18px] h-[18px] shrink-0" />
+                      {!collapsed && <span className="truncate">{label}</span>}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </nav>
 
       <div className="hidden lg:flex px-2 py-3 border-t border-earth-800/60">
