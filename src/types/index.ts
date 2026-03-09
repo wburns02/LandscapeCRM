@@ -555,6 +555,37 @@ export function getContractServiceName(s: string | ContractService): string {
   return typeof s === 'string' ? s : s.description ?? '';
 }
 
+// --- Recurring Services ---
+
+export type ServiceFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
+export type RecurringServiceStatus = 'active' | 'paused' | 'cancelled' | 'expired';
+
+export interface RecurringService {
+  id: string;
+  customer_id: string;
+  customer?: Customer;
+  title: string;
+  service_type: string;
+  frequency: ServiceFrequency;
+  preferred_day?: string; // 'monday', 'tuesday', etc.
+  preferred_time?: string; // '08:00'
+  crew_id?: string;
+  crew?: Crew;
+  price_per_visit: number;
+  estimated_hours: number;
+  status: RecurringServiceStatus;
+  start_date: string;
+  end_date?: string;
+  last_completed?: string;
+  next_scheduled?: string;
+  total_visits: number;
+  visits_completed: number;
+  notes?: string;
+  services_included: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 // --- Direct Mail ---
 
 export type DirectMailStatus = 'draft' | 'ready' | 'sent_to_printer' | 'printed' | 'mailed' | 'delivered';

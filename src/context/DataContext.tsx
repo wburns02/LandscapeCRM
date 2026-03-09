@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type {
   Customer, Job, Crew, InventoryItem, Quote, Invoice, Contract,
   Equipment, Lead, Photo, DashboardData, SystemSettings, ScheduleEvent,
+  RecurringService,
 } from '../types';
 import api from '../api/client';
 import { useAuth } from './AuthContext';
@@ -112,6 +113,10 @@ interface DataContextType {
   recordPayment: (invoiceId: string, amount: number) => Promise<void>;
   deleteCustomer: (customerId: string) => Promise<void>;
   deleteJob: (jobId: string) => Promise<void>;
+  recurringServices: RecurringService[];
+  addRecurringService: (data: Partial<RecurringService>) => Promise<RecurringService>;
+  updateRecurringService: (id: string, data: Partial<RecurringService>) => Promise<void>;
+  generateServiceVisit: (serviceId: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -131,6 +136,7 @@ function getDemoData(): {
   scheduleEvents: ScheduleEvent[];
   dashboard: DashboardData;
   settings: SystemSettings;
+  recurringServices: RecurringService[];
 } {
   const customers: Customer[] = [
     { id: '1', name: 'Sarah Mitchell', email: 'sarah@example.com', phone: '(512) 555-0101', address: '1425 Oak Hollow Dr', city: 'Austin', state: 'TX', zip: '78745', type: 'residential', tags: ['premium', 'weekly'], property_size_sqft: 12000, notes: 'Large backyard with pool area', created_at: '2025-01-15T00:00:00Z', updated_at: '2026-03-01T00:00:00Z' },
@@ -247,6 +253,68 @@ function getDemoData(): {
     { id: '7', name: 'Robert Simmons', phone: '(512) 555-2007', source: 'door_hanger', status: 'lost', service_interest: 'Weekly lawn mowing', estimated_value: 3600, notes: 'Went with cheaper competitor', created_at: '2026-02-01T00:00:00Z', updated_at: '2026-02-20T00:00:00Z' },
   ];
 
+  const recurringServices: RecurringService[] = [
+    {
+      id: 'rs-1', customer_id: '1', customer: customers[0], title: 'Weekly Lawn Maintenance',
+      service_type: 'lawn_maintenance', frequency: 'weekly', preferred_day: 'monday', preferred_time: '08:00',
+      crew_id: '1', crew: crews[0], price_per_visit: 175, estimated_hours: 2, status: 'active',
+      start_date: '2026-01-06', end_date: '2026-12-31', last_completed: '2026-03-03',
+      next_scheduled: '2026-03-10', total_visits: 52, visits_completed: 9,
+      services_included: ['Lawn Mowing', 'Edging & Blowing', 'Weed Control', 'Spot Fertilization'],
+      notes: 'Gate code: 4521. Dogs in backyard — ring bell first.',
+      created_at: '2025-12-28T00:00:00Z', updated_at: '2026-03-03T00:00:00Z',
+    },
+    {
+      id: 'rs-2', customer_id: '2', customer: customers[1], title: 'Commercial Grounds Care',
+      service_type: 'commercial_maintenance', frequency: 'weekly', preferred_day: 'tuesday', preferred_time: '06:30',
+      crew_id: '2', crew: crews[1], price_per_visit: 450, estimated_hours: 4, status: 'active',
+      start_date: '2026-01-07', end_date: '2026-12-31', last_completed: '2026-03-04',
+      next_scheduled: '2026-03-11', total_visits: 52, visits_completed: 9,
+      services_included: ['Lawn Mowing', 'Edging & Blowing', 'Parking Lot Cleanup', 'Shrub Trimming', 'Seasonal Color Rotation'],
+      notes: 'Must be finished before 10 AM — tenant complaints.',
+      created_at: '2025-12-28T00:00:00Z', updated_at: '2026-03-04T00:00:00Z',
+    },
+    {
+      id: 'rs-3', customer_id: '3', customer: customers[2], title: 'HOA Full Service',
+      service_type: 'hoa_maintenance', frequency: 'biweekly', preferred_day: 'wednesday', preferred_time: '06:00',
+      crew_id: '1', crew: crews[0], price_per_visit: 2100, estimated_hours: 8, status: 'active',
+      start_date: '2026-01-08', end_date: '2026-12-31', last_completed: '2026-03-05',
+      next_scheduled: '2026-03-12', total_visits: 26, visits_completed: 5,
+      services_included: ['Common Area Mowing', 'Edging & Blowing', 'Irrigation Inspection', 'Fertilization', 'Tree & Shrub Care', 'Seasonal Color Installation'],
+      notes: 'HOA board walk-through every 3rd visit.',
+      created_at: '2025-12-20T00:00:00Z', updated_at: '2026-03-05T00:00:00Z',
+    },
+    {
+      id: 'rs-4', customer_id: '5', customer: customers[4], title: 'Municipal Parks Mowing',
+      service_type: 'municipal_maintenance', frequency: 'biweekly', preferred_day: 'thursday', preferred_time: '07:00',
+      crew_id: '3', crew: crews[2], price_per_visit: 1200, estimated_hours: 6, status: 'active',
+      start_date: '2026-01-09', end_date: '2027-06-30', last_completed: '2026-03-06',
+      next_scheduled: '2026-03-13', total_visits: 39, visits_completed: 4,
+      services_included: ['Park Lawn Mowing', 'Trail Edging', 'Debris & Litter Cleanup', 'Playground Area Maintenance'],
+      notes: 'Coordinate with Parks Dept for field closures.',
+      created_at: '2025-12-15T00:00:00Z', updated_at: '2026-03-06T00:00:00Z',
+    },
+    {
+      id: 'rs-5', customer_id: '4', customer: customers[3], title: 'Lawn & Garden Care',
+      service_type: 'lawn_maintenance', frequency: 'biweekly', preferred_day: 'friday', preferred_time: '09:00',
+      price_per_visit: 125, estimated_hours: 1.5, status: 'paused',
+      start_date: '2025-09-01', last_completed: '2026-02-14',
+      next_scheduled: undefined, total_visits: 26, visits_completed: 12,
+      services_included: ['Lawn Mowing', 'Edging & Blowing', 'Garden Bed Weeding'],
+      notes: 'Paused — customer traveling until April.',
+      created_at: '2025-08-25T00:00:00Z', updated_at: '2026-02-14T00:00:00Z',
+    },
+    {
+      id: 'rs-6', customer_id: '6', customer: customers[5], title: 'Monthly Maintenance',
+      service_type: 'lawn_maintenance', frequency: 'monthly', preferred_day: 'friday', preferred_time: '10:00',
+      crew_id: '3', crew: crews[2], price_per_visit: 200, estimated_hours: 2, status: 'active',
+      start_date: '2026-02-20', end_date: '2027-02-20', last_completed: '2026-02-20',
+      next_scheduled: '2026-03-15', total_visits: 12, visits_completed: 1,
+      services_included: ['Lawn Mowing', 'Edging & Blowing', 'Shrub Trimming', 'Flower Bed Maintenance'],
+      created_at: '2026-02-18T00:00:00Z', updated_at: '2026-02-20T00:00:00Z',
+    },
+  ];
+
   const dashboard: DashboardData = {
     active_jobs: 5,
     revenue_mtd: 12450,
@@ -321,6 +389,7 @@ function getDemoData(): {
       all_day: false,
       type: 'job' as const,
     })),
+    recurringServices,
     dashboard,
     settings,
   };
@@ -338,6 +407,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [recurringServices, setRecurringServices] = useState<RecurringService[]>([]);
   const [scheduleEvents, setScheduleEvents] = useState<ScheduleEvent[]>([]);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
@@ -356,6 +426,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setEquipment(demo.equipment);
     setLeads(demo.leads);
     setPhotos(demo.photos);
+    setRecurringServices(demo.recurringServices);
     setScheduleEvents(demo.scheduleEvents);
     setDashboard(demo.dashboard);
     setSettings(demo.settings);
@@ -786,6 +857,121 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setJobs(prev => prev.filter(j => j.id !== jobId));
   }, []);
 
+  const addRecurringService = useCallback(async (data: Partial<RecurringService>): Promise<RecurringService> => {
+    const newService: RecurringService = {
+      id: generateId(),
+      customer_id: data.customer_id || '',
+      customer: data.customer,
+      title: data.title || '',
+      service_type: data.service_type || 'lawn_maintenance',
+      frequency: data.frequency || 'weekly',
+      preferred_day: data.preferred_day,
+      preferred_time: data.preferred_time,
+      crew_id: data.crew_id,
+      crew: data.crew,
+      price_per_visit: data.price_per_visit || 0,
+      estimated_hours: data.estimated_hours || 1,
+      status: data.status || 'active',
+      start_date: data.start_date || new Date().toISOString().split('T')[0],
+      end_date: data.end_date,
+      last_completed: data.last_completed,
+      next_scheduled: data.next_scheduled,
+      total_visits: data.total_visits || 0,
+      visits_completed: data.visits_completed || 0,
+      notes: data.notes,
+      services_included: data.services_included || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const result = await api.post<RecurringService>('/recurring-services', data);
+      setRecurringServices(prev => [...prev, result]);
+      return result;
+    } catch {
+      setRecurringServices(prev => [...prev, newService]);
+      return newService;
+    }
+  }, []);
+
+  const updateRecurringService = useCallback(async (id: string, data: Partial<RecurringService>) => {
+    try {
+      await api.patch(`/recurring-services/${id}`, data);
+    } catch {
+      // API unavailable (demo mode) — continue with local update
+    }
+    setRecurringServices(prev => prev.map(s =>
+      s.id === id ? { ...s, ...data, updated_at: new Date().toISOString() } : s
+    ));
+  }, []);
+
+  const generateServiceVisit = useCallback(async (serviceId: string) => {
+    const service = recurringServices.find(s => s.id === serviceId);
+    if (!service) return;
+
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    // Create a job from the recurring service
+    const newJob: Job = {
+      id: generateId(),
+      customer_id: service.customer_id,
+      customer: service.customer,
+      title: service.title,
+      type: 'landscape_maintenance',
+      status: 'scheduled',
+      crew_id: service.crew_id,
+      crew: service.crew,
+      scheduled_date: service.next_scheduled || todayStr,
+      scheduled_time: service.preferred_time || '08:00',
+      estimated_hours: service.estimated_hours,
+      total_price: service.price_per_visit,
+      address: service.customer?.address || '',
+      is_recurring: true,
+      photos: [],
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    };
+
+    try {
+      const result = await api.post<Job>('/jobs', {
+        title: newJob.title, customer_id: newJob.customer_id,
+        job_type: 'landscape_maintenance', crew_id: newJob.crew_id || undefined,
+        scheduled_date: newJob.scheduled_date, estimated_duration_hours: newJob.estimated_hours,
+        total_price: newJob.total_price, status: 'scheduled', is_recurring: true,
+      });
+      const normalized = normalizeJob(result);
+      setJobs(prev => [...prev, normalized]);
+    } catch {
+      setJobs(prev => [...prev, newJob]);
+    }
+
+    // Calculate next scheduled date based on frequency
+    const baseDate = service.next_scheduled ? new Date(service.next_scheduled) : now;
+    let nextDate: Date;
+    switch (service.frequency) {
+      case 'weekly': nextDate = new Date(baseDate.getTime() + 7 * 24 * 60 * 60 * 1000); break;
+      case 'biweekly': nextDate = new Date(baseDate.getTime() + 14 * 24 * 60 * 60 * 1000); break;
+      case 'monthly': nextDate = new Date(baseDate); nextDate.setMonth(nextDate.getMonth() + 1); break;
+      case 'quarterly': nextDate = new Date(baseDate); nextDate.setMonth(nextDate.getMonth() + 3); break;
+      default: nextDate = new Date(baseDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+    }
+
+    const updatedFields: Partial<RecurringService> = {
+      visits_completed: service.visits_completed + 1,
+      last_completed: todayStr,
+      next_scheduled: nextDate.toISOString().split('T')[0],
+    };
+
+    try {
+      await api.patch(`/recurring-services/${serviceId}`, updatedFields);
+    } catch {
+      // demo fallback
+    }
+    setRecurringServices(prev => prev.map(s =>
+      s.id === serviceId ? { ...s, ...updatedFields, updated_at: now.toISOString() } : s
+    ));
+  }, [recurringServices]);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchAll();
@@ -806,6 +992,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addCustomer, addJob, addQuote, addInvoice, addContract,
         addCrew, addEquipment, addLead, addInventoryItem,
         updateInventoryQuantity, recordPayment, deleteCustomer, deleteJob,
+        recurringServices, addRecurringService, updateRecurringService, generateServiceVisit,
       }}
     >
       {children}
