@@ -149,7 +149,7 @@ export default function QuotesPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-lg font-bold text-earth-50">${quote.total.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-earth-50">${quote.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     <p className="text-xs text-earth-400">inc. tax</p>
                   </div>
                   <div className="flex gap-1">

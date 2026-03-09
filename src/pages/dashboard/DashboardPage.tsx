@@ -73,7 +73,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Active Jobs" value={dashboard.active_jobs} icon={<Briefcase className="w-5 h-5" />} color="green" change={12} />
         <StatCard title="Revenue MTD" value={`$${dashboard.revenue_mtd.toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} color="green" change={8} />
         <StatCard title="Revenue YTD" value={`$${dashboard.revenue_ytd.toLocaleString()}`} icon={<TrendingUp className="w-5 h-5" />} color="sky" />

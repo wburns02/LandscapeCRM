@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import StatCard from '../../components/ui/StatCard';
 import Badge from '../../components/ui/Badge';
 import SlidePanel from '../../components/ui/SlidePanel';
 import EmptyState from '../../components/ui/EmptyState';
@@ -277,30 +278,10 @@ export default function ProspectsPage() {
       {/* Stats cards */}
       {stats && stats.total > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <div className="p-4">
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Total Prospects</p>
-              <p className="text-2xl font-bold text-earth-50 mt-1">{stats.total.toLocaleString()}</p>
-            </div>
-          </Card>
-          <Card>
-            <div className="p-4">
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Avg Lead Score</p>
-              <p className="text-2xl font-bold text-green-400 mt-1">{stats.avg_lead_score}</p>
-            </div>
-          </Card>
-          <Card>
-            <div className="p-4">
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Avg Property Value</p>
-              <p className="text-2xl font-bold text-earth-50 mt-1">{formatCurrency(stats.avg_property_value)}</p>
-            </div>
-          </Card>
-          <Card>
-            <div className="p-4">
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Cities</p>
-              <p className="text-2xl font-bold text-earth-50 mt-1">{stats.by_city.length}</p>
-            </div>
-          </Card>
+          <StatCard title="Total Prospects" value={stats.total} icon={<Users className="w-5 h-5" />} color="green" />
+          <StatCard title="Avg Lead Score" value={stats.avg_lead_score} icon={<Star className="w-5 h-5" />} color="amber" />
+          <StatCard title="Avg Property Value" value={formatCurrency(stats.avg_property_value)} icon={<Home className="w-5 h-5" />} color="sky" />
+          <StatCard title="Cities" value={stats.by_city.length} icon={<MapPin className="w-5 h-5" />} color="earth" />
         </div>
       )}
 

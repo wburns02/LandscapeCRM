@@ -7,6 +7,7 @@ import {
 import { useData } from '../../context/DataContext';
 import type { RecurringService, ServiceFrequency } from '../../types';
 import Button from '../../components/ui/Button';
+import StatCard from '../../components/ui/StatCard';
 import Input from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
 
@@ -181,51 +182,11 @@ export default function RecurringServicesPage() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-earth-800/50 border border-earth-700/50 rounded-xl p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Active Services</p>
-              <p className="text-2xl font-bold text-earth-50 mt-1">{stats.active}</p>
-            </div>
-            <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <RefreshCw className="w-5 h-5 text-green-400" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-earth-800/50 border border-earth-700/50 rounded-xl p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-earth-50 mt-1">${stats.monthlyRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-            </div>
-            <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-emerald-400" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-earth-800/50 border border-earth-700/50 rounded-xl p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Due This Week</p>
-              <p className="text-2xl font-bold text-earth-50 mt-1">{stats.dueSoon}</p>
-            </div>
-            <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-blue-400" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-earth-800/50 border border-earth-700/50 rounded-xl p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Total Services</p>
-              <p className="text-2xl font-bold text-earth-50 mt-1">{stats.total}</p>
-            </div>
-            <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <Repeat className="w-5 h-5 text-purple-400" />
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Active Services" value={stats.active} icon={<RefreshCw className="w-5 h-5" />} color="green" />
+        <StatCard title="Monthly Revenue" value={`$${stats.monthlyRevenue.toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} color="green" />
+        <StatCard title="Due This Week" value={stats.dueSoon} icon={<Calendar className="w-5 h-5" />} color="sky" />
+        <StatCard title="Total Services" value={stats.total} icon={<Repeat className="w-5 h-5" />} color="earth" />
       </div>
 
       {/* Toolbar */}

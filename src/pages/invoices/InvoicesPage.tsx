@@ -180,8 +180,11 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-earth-100">Invoices</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-earth-100">Invoices</h2>
+          <p className="text-sm text-earth-400">{invoices.length} total invoices</p>
+        </div>
         <Button icon={<Plus className="w-4 h-4" />} onClick={() => setShowCreateModal(true)}>
           New Invoice
         </Button>

@@ -5,6 +5,7 @@ import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
+import StatCard from '../../components/ui/StatCard';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
@@ -81,34 +82,10 @@ export default function EquipmentPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-600/15 text-green-400"><Wrench className="w-5 h-5" /></div>
-            <div>
-              <p className="text-xs text-earth-400">Total Assets</p>
-              <p className="text-xl font-bold text-earth-50">{equipment.length}</p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-sky-600/15 text-sky-400"><Clock className="w-5 h-5" /></div>
-            <div>
-              <p className="text-xs text-earth-400">Total Hours</p>
-              <p className="text-xl font-bold text-earth-50">{equipment.reduce((s, e) => s + e.hours_used, 0).toLocaleString()}</p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-600/15 text-amber-400"><DollarSign className="w-5 h-5" /></div>
-            <div>
-              <p className="text-xs text-earth-400">Asset Value</p>
-              <p className="text-xl font-bold text-earth-50">${totalAssetValue.toLocaleString()}</p>
-            </div>
-          </div>
-        </Card>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <StatCard title="Total Assets" value={equipment.length} icon={<Wrench className="w-5 h-5" />} color="green" />
+        <StatCard title="Total Hours" value={equipment.reduce((s, e) => s + e.hours_used, 0).toLocaleString()} icon={<Clock className="w-5 h-5" />} color="sky" />
+        <StatCard title="Asset Value" value={`$${totalAssetValue.toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} color="amber" />
       </div>
 
       <SearchBar value={search} onChange={setSearch} placeholder="Search equipment..." />

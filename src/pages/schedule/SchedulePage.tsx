@@ -106,7 +106,7 @@ export default function SchedulePage() {
           </button>
           <h2 className="text-lg font-semibold font-display text-earth-100 text-center truncate">
             {viewMode === 'week'
-              ? `${format(weekDays[0], 'MMM d')} - ${format(weekDays[6], 'MMM d, yyyy')}`
+              ? `${format(weekDays[0], 'MMM d')} – ${format(weekDays[6], 'MMM d')}`
               : format(currentDate, 'MMMM yyyy')
             }
           </h2>

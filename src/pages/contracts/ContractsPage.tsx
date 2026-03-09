@@ -5,6 +5,7 @@ import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
+import StatCard from '../../components/ui/StatCard';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
@@ -70,25 +71,9 @@ export default function ContractsPage() {
         <Button icon={<Plus className="w-4 h-4" />} onClick={() => setShowAddModal(true)}>New Contract</Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-green-600/15 text-green-400"><DollarSign className="w-5 h-5" /></div>
-            <div>
-              <p className="text-sm text-earth-400">Monthly Recurring Revenue</p>
-              <p className="text-xl font-bold text-earth-50">${totalMonthly.toLocaleString()}</p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-sky-600/15 text-sky-400"><Calendar className="w-5 h-5" /></div>
-            <div>
-              <p className="text-sm text-earth-400">Annual Contract Value</p>
-              <p className="text-xl font-bold text-earth-50">${totalAnnual.toLocaleString()}</p>
-            </div>
-          </div>
-        </Card>
+      <div className="grid grid-cols-2 gap-4">
+        <StatCard title="Monthly Recurring Revenue" value={`$${totalMonthly.toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} color="green" />
+        <StatCard title="Annual Contract Value" value={`$${totalAnnual.toLocaleString()}`} icon={<Calendar className="w-5 h-5" />} color="sky" />
       </div>
 
       <div className="flex gap-3">

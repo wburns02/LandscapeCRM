@@ -11,6 +11,7 @@ import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
+import StatCard from '../../components/ui/StatCard';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
@@ -262,53 +263,31 @@ export default function ExpensesPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-earth-400 uppercase tracking-wide">This Month</p>
-              <DollarSign className="w-4 h-4 text-green-400" />
-            </div>
-            <p className="text-2xl font-bold text-earth-50">{formatMoney(totalThisMonth)}</p>
-            {totalLastMonth > 0 && (
-              <p className={`text-xs mt-1 flex items-center gap-1 ${totalThisMonth > totalLastMonth ? 'text-red-400' : 'text-green-400'}`}>
-                <TrendingUp className="w-3 h-3" />
-                {totalThisMonth > totalLastMonth ? '+' : ''}{Math.round(((totalThisMonth - totalLastMonth) / totalLastMonth) * 100)}% vs last month
-              </p>
-            )}
-          </div>
-        </Card>
-        <Card>
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Pending Approval</p>
-              <Clock className="w-4 h-4 text-amber-400" />
-            </div>
-            <p className="text-2xl font-bold text-amber-400">{formatMoney(pendingTotal)}</p>
-            <p className="text-xs text-earth-400 mt-1">{pendingCount} expense{pendingCount !== 1 ? 's' : ''} awaiting review</p>
-          </div>
-        </Card>
-        <Card>
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Top Category</p>
-              {categoryBreakdown[0] && <span style={{ color: categoryBreakdown[0].color }}>{CATEGORY_CONFIG[thisMonthExpenses.find(e => CATEGORY_CONFIG[e.category].label === categoryBreakdown[0]?.name)?.category || 'materials']?.icon}</span>}
-            </div>
-            <p className="text-2xl font-bold text-earth-50">{categoryBreakdown[0]?.name || '—'}</p>
-            <p className="text-xs text-earth-400 mt-1">{categoryBreakdown[0] ? formatMoney(categoryBreakdown[0].value) : 'No data'}</p>
-          </div>
-        </Card>
-        <Card>
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-earth-400 uppercase tracking-wide">Avg per Job</p>
-              <Receipt className="w-4 h-4 text-sky-400" />
-            </div>
-            <p className="text-2xl font-bold text-earth-50">
-              {jobExpenses.length > 0 ? formatMoney(jobExpenses.reduce((s, j) => s + j.actual, 0) / jobExpenses.length) : '$0.00'}
-            </p>
-            <p className="text-xs text-earth-400 mt-1">{jobExpenses.length} jobs with expenses</p>
-          </div>
-        </Card>
+        <StatCard
+          title="This Month"
+          value={formatMoney(totalThisMonth)}
+          icon={<DollarSign className="w-5 h-5" />}
+          color="green"
+          change={totalLastMonth > 0 ? Math.round(((totalThisMonth - totalLastMonth) / totalLastMonth) * 100) : undefined}
+        />
+        <StatCard
+          title="Pending Approval"
+          value={formatMoney(pendingTotal)}
+          icon={<Clock className="w-5 h-5" />}
+          color="amber"
+        />
+        <StatCard
+          title="Top Category"
+          value={categoryBreakdown[0]?.name || '—'}
+          icon={<Receipt className="w-5 h-5" />}
+          color="earth"
+        />
+        <StatCard
+          title="Avg per Job"
+          value={jobExpenses.length > 0 ? formatMoney(jobExpenses.reduce((s, j) => s + j.actual, 0) / jobExpenses.length) : '$0.00'}
+          icon={<Receipt className="w-5 h-5" />}
+          color="sky"
+        />
       </div>
 
       {/* Tabs */}

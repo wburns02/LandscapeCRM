@@ -88,7 +88,7 @@ export default function CustomersPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-earth-100">All Customers</h2>
+          <h2 className="text-lg font-semibold text-earth-100">Customers</h2>
           <p className="text-sm text-earth-400">{customers.length} total customers</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} onClick={() => setShowAddModal(true)}>
