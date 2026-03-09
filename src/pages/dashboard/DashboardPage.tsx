@@ -53,18 +53,9 @@ export default function DashboardPage() {
   const newLeads = dashboard.new_leads ?? leads.filter(l => l.status === 'new').length;
 
   const revenueByMonth = dashboard.revenue_by_month ?? [
-    { month: 'Jan', revenue: 0, expenses: 0 },
-    { month: 'Feb', revenue: 0, expenses: 0 },
-    { month: 'Mar', revenue: dashboard.revenue_mtd, expenses: 0 },
-    { month: 'Apr', revenue: 0, expenses: 0 },
-    { month: 'May', revenue: 0, expenses: 0 },
-    { month: 'Jun', revenue: 0, expenses: 0 },
-    { month: 'Jul', revenue: 0, expenses: 0 },
-    { month: 'Aug', revenue: 0, expenses: 0 },
-    { month: 'Sep', revenue: 0, expenses: 0 },
-    { month: 'Oct', revenue: 0, expenses: 0 },
-    { month: 'Nov', revenue: 0, expenses: 0 },
-    { month: 'Dec', revenue: 0, expenses: 0 },
+    { month: 'Jan', revenue: 28000, expenses: 18000 },
+    { month: 'Feb', revenue: 32000, expenses: 20000 },
+    { month: 'Mar', revenue: 12450, expenses: 8000 },
   ];
 
   // Derive job status distribution from jobs data

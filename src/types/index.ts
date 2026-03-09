@@ -340,6 +340,7 @@ export interface Photo {
   caption?: string;
   type: 'before' | 'after' | 'progress' | 'issue' | 'property';
   job_id?: string;
+  job_name?: string;
   customer_id?: string;
   uploaded_by?: string;
   created_at: string;

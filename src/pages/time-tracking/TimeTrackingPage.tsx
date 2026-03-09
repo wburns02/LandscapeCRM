@@ -30,7 +30,6 @@ function getDemoTimeEntries(
   crews: ReturnType<typeof useData>['crews'],
   jobs: ReturnType<typeof useData>['jobs'],
 ): TimeEntry[] {
-  // Build member list with crew_id attached
   const allMembers = crews.flatMap(c =>
     (c.members || []).map(m => ({ ...m, crew_id: c.id })),
   );
@@ -39,52 +38,133 @@ function getDemoTimeEntries(
   let id = 1;
   const rand = seededRandom(42);
 
-  // Generate entries for the past 2 weeks
+  // Collect weekdays from past 2 weeks
+  const weekdays: Date[] = [];
   for (let day = 13; day >= 0; day--) {
     const date = new Date(now);
     date.setDate(date.getDate() - day);
-    if (date.getDay() === 0 || date.getDay() === 6) continue; // skip weekends
+    if (date.getDay() === 0 || date.getDay() === 6) continue;
+    weekdays.push(date);
+  }
 
-    for (const member of allMembers) {
-      const memberJobs = jobs.filter(
-        j => j.crew_id === member.crew_id && j.status !== 'cancelled',
+  // Determine total hour budget per job based on status and estimated hours.
+  // Completed jobs: 90-110% of estimated. In-progress: 40-70%. Scheduled/on_hold: 10-30%.
+  const activeJobs = jobs.filter(j => j.status !== 'cancelled');
+  const jobHourBudgets: Record<string, number> = {};
+  for (const job of activeJobs) {
+    const est = job.estimated_hours || 4;
+    let fraction: number;
+    if (job.status === 'completed') {
+      fraction = 0.9 + rand() * 0.2; // 90-110%
+    } else if (job.status === 'in_progress') {
+      fraction = 0.4 + rand() * 0.3; // 40-70%
+    } else {
+      // scheduled, on_hold, pending
+      fraction = 0.1 + rand() * 0.2; // 10-30%
+    }
+    jobHourBudgets[job.id] = parseFloat((est * fraction).toFixed(1));
+  }
+
+  // Track how many hours have been logged per job
+  const jobHoursLogged: Record<string, number> = {};
+  for (const job of activeJobs) {
+    jobHoursLogged[job.id] = 0;
+  }
+
+  // For each crew, figure out which days to work each job.
+  // We spread the work across the 2-week period, picking 1-2 jobs per day per crew.
+  const crewIds = crews.map(c => c.id);
+
+  for (const crewId of crewIds) {
+    const crewMembers = allMembers.filter(m => m.crew_id === crewId);
+    if (crewMembers.length === 0) continue;
+
+    const crewJobs = activeJobs.filter(j => j.crew_id === crewId);
+    if (crewJobs.length === 0) continue;
+
+    // Sort jobs: completed first (they happened earlier), then in_progress, then scheduled
+    const statusOrder: Record<string, number> = { completed: 0, in_progress: 1, scheduled: 2, on_hold: 3, pending: 4 };
+    const sortedJobs = [...crewJobs].sort(
+      (a, b) => (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5),
+    );
+
+    // Assign jobs to specific days. Each day a crew works on 1-2 jobs.
+    for (let dayIdx = 0; dayIdx < weekdays.length; dayIdx++) {
+      const date = weekdays[dayIdx];
+      const isToday = dayIdx === weekdays.length - 1;
+
+      // Pick 1-2 jobs for this day that still have budget remaining
+      const availableJobs = sortedJobs.filter(
+        j => (jobHourBudgets[j.id] - jobHoursLogged[j.id]) > 0.3,
       );
-      if (memberJobs.length === 0) continue;
+      if (availableJobs.length === 0) continue;
 
-      const job = memberJobs[day % memberJobs.length];
-      const startHour = 7 + Math.floor(rand() * 2);
-      const hours = 2.5 + rand() * 4;
-      const clockIn = new Date(date);
-      clockIn.setHours(startHour, 0, 0, 0);
-      const clockOut = new Date(clockIn);
-      clockOut.setHours(
-        clockIn.getHours() + Math.floor(hours),
-        Math.round((hours % 1) * 60),
-        0,
-        0,
-      );
+      const jobsToday = rand() > 0.6 && availableJobs.length > 1
+        ? [availableJobs[0], availableJobs[1]]
+        : [availableJobs[dayIdx % availableJobs.length]];
 
-      // Today's foreman entries are still running (active timers)
-      const isActiveTimer = day === 0 && member.role === 'foreman';
+      let dayStartHour = 7 + Math.floor(rand() * 1); // 7:00 or 7:30ish start
 
-      // For active timers, use a relative time (2-3 hours ago) to avoid timezone issues
-      const entryClockIn = isActiveTimer
-        ? new Date(now.getTime() - (2 + rand()) * 3600000)
-        : clockIn;
+      for (const job of jobsToday) {
+        const remainingBudget = jobHourBudgets[job.id] - jobHoursLogged[job.id];
+        if (remainingBudget <= 0.3) continue;
 
-      entries.push({
-        id: String(id++),
-        crew_member_id: member.id,
-        crew_member: member,
-        job_id: job.id,
-        job: job,
-        clock_in: entryClockIn instanceof Date ? entryClockIn.toISOString() : clockIn.toISOString(),
-        clock_out: isActiveTimer ? undefined : clockOut.toISOString(),
-        hours: isActiveTimer ? 0 : parseFloat(hours.toFixed(1)),
-        break_minutes: rand() > 0.7 ? 30 : 0,
-        notes: day % 3 === 0 ? 'Standard shift' : undefined,
-        created_at: clockIn.toISOString(),
-      });
+        // Total crew hours for this job today = remaining budget spread over days,
+        // but capped so crew members each work a reasonable amount (1.5-4h per job per day).
+        const maxPerMemberPerJob = 1.5 + rand() * 2.5; // 1.5-4.0 hours each
+        const totalCrewHoursNeeded = Math.min(
+          remainingBudget,
+          crewMembers.length * maxPerMemberPerJob,
+        );
+
+        // Each member gets an equal-ish share of the job's hours for today
+        const hoursPerMember = totalCrewHoursNeeded / crewMembers.length;
+
+        for (const member of crewMembers) {
+          const memberHours = parseFloat(
+            Math.max(0.5, hoursPerMember * (0.85 + rand() * 0.3)).toFixed(1),
+          );
+          // Don't exceed the remaining budget
+          const actualHours = parseFloat(
+            Math.min(memberHours, jobHourBudgets[job.id] - jobHoursLogged[job.id]).toFixed(1),
+          );
+          if (actualHours <= 0) break;
+
+          jobHoursLogged[job.id] += actualHours;
+
+          const clockIn = new Date(date);
+          clockIn.setHours(dayStartHour, Math.floor(rand() * 30), 0, 0);
+          const clockOut = new Date(clockIn);
+          clockOut.setHours(
+            clockIn.getHours() + Math.floor(actualHours),
+            clockIn.getMinutes() + Math.round((actualHours % 1) * 60),
+            0,
+            0,
+          );
+
+          // Today's foreman entries are still running (active timers)
+          const isActiveTimer = isToday && member.role === 'foreman';
+          const entryClockIn = isActiveTimer
+            ? new Date(now.getTime() - (2 + rand()) * 3600000)
+            : clockIn;
+
+          entries.push({
+            id: String(id++),
+            crew_member_id: member.id,
+            crew_member: member,
+            job_id: job.id,
+            job: job,
+            clock_in: entryClockIn.toISOString(),
+            clock_out: isActiveTimer ? undefined : clockOut.toISOString(),
+            hours: isActiveTimer ? 0 : actualHours,
+            break_minutes: rand() > 0.7 ? 30 : 0,
+            notes: dayIdx % 3 === 0 ? 'Standard shift' : undefined,
+            created_at: clockIn.toISOString(),
+          });
+        }
+
+        dayStartHour += Math.ceil(hoursPerMember) + (rand() > 0.5 ? 1 : 0); // gap between jobs
+      }
     }
   }
 

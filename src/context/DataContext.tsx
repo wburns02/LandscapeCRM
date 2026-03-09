@@ -378,7 +378,16 @@ function getDemoData(): {
     contracts,
     equipment,
     leads,
-    photos: [],
+    photos: [
+      { id: 'p1', url: '', thumbnail_url: '', caption: 'Backyard before paver installation - bare dirt and old grass', type: 'before', job_id: '4', job_name: 'Patio Pavers Installation', customer_id: '4', uploaded_by: 'Miguel Torres', created_at: '2026-02-25T10:00:00Z' },
+      { id: 'p2', url: '', thumbnail_url: '', caption: 'Completed patio with herringbone pattern pavers', type: 'after', job_id: '4', job_name: 'Patio Pavers Installation', customer_id: '4', uploaded_by: 'Miguel Torres', created_at: '2026-03-08T16:30:00Z' },
+      { id: 'p3', url: '', thumbnail_url: '', caption: 'Mulch delivery - 15 yards of hardwood mulch staged', type: 'progress', job_id: '2', job_name: 'Spring Mulch Installation', customer_id: '2', uploaded_by: 'Jake Rivera', created_at: '2026-03-05T08:15:00Z' },
+      { id: 'p4', url: '', thumbnail_url: '', caption: 'Front beds cleared and prepped for mulch', type: 'progress', job_id: '2', job_name: 'Spring Mulch Installation', customer_id: '2', uploaded_by: 'Jake Rivera', created_at: '2026-03-05T11:00:00Z' },
+      { id: 'p5', url: '', thumbnail_url: '', caption: 'Mulch spread complete - east side of property', type: 'progress', job_id: '2', job_name: 'Spring Mulch Installation', customer_id: '2', uploaded_by: 'Jake Rivera', created_at: '2026-03-05T14:45:00Z' },
+      { id: 'p6', url: '', thumbnail_url: '', caption: 'Front yard overview - 1425 Oak Hollow Dr', type: 'property', job_id: '1', job_name: 'Weekly Lawn Maintenance', customer_id: '1', uploaded_by: 'Carlos Mendez', created_at: '2026-03-01T09:00:00Z' },
+      { id: 'p7', url: '', thumbnail_url: '', caption: 'Flower bed area before new design installation', type: 'before', job_id: '6', job_name: 'New Flower Bed Design & Install', customer_id: '6', uploaded_by: 'Carlos Mendez', created_at: '2026-03-01T10:30:00Z' },
+      { id: 'p8', url: '', thumbnail_url: '', caption: 'Park trees after trimming - clean canopy lines', type: 'after', job_id: '5', job_name: 'Park Tree Trimming', customer_id: '5', uploaded_by: 'Sam', created_at: '2026-03-03T15:00:00Z' },
+    ],
     scheduleEvents: jobs.map(j => ({
       id: j.id,
       job_id: j.id,
