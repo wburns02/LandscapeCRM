@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Briefcase, Calendar, Package, FileText,
   Receipt, FileSignature, UsersRound, Wrench, Target, UserSearch, Mail,
   RefreshCw, Send, Camera, BarChart3, Settings, Menu, X, ChevronLeft, ChevronDown,
-  Timer, ClipboardList, Globe, BadgeDollarSign, Calculator,
+  Timer, ClipboardList, Globe, BadgeDollarSign, Calculator, Repeat,
   type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -47,6 +47,7 @@ const navSections: NavSection[] = [
       { to: '/proposals', icon: ClipboardList, label: 'Proposals' },
       { to: '/expenses', icon: BadgeDollarSign, label: 'Expenses' },
       { to: '/job-costing', icon: Calculator, label: 'Job Costing' },
+      { to: '/recurring-billing', icon: Repeat, label: 'Billing' },
     ],
   },
   {

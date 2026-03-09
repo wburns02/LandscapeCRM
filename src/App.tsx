@@ -30,6 +30,7 @@ import ProposalBuilderPage from './pages/proposals/ProposalBuilderPage';
 import CustomerPortalPage from './pages/portal/CustomerPortalPage';
 import ExpensesPage from './pages/expenses/ExpensesPage';
 import JobCostingPage from './pages/job-costing/JobCostingPage';
+import RecurringBillingPage from './pages/billing/RecurringBillingPage';
 import SettingsPage from './pages/settings/SettingsPage';
 
 const pageTitles: Record<string, string> = {
@@ -52,6 +53,7 @@ const pageTitles: Record<string, string> = {
   '/proposals': 'Proposals',
   '/expenses': 'Expenses',
   '/job-costing': 'Job Costing',
+  '/recurring-billing': 'Recurring Billing',
   '/photos': 'Photos',
   '/portal': 'Customer Portal',
   '/reports': 'Reports',
@@ -93,6 +95,7 @@ function AppLayout() {
             <Route path="/proposals" element={<ProposalBuilderPage />} />
             <Route path="/expenses" element={<ExpensesPage />} />
             <Route path="/job-costing" element={<JobCostingPage />} />
+            <Route path="/recurring-billing" element={<RecurringBillingPage />} />
             <Route path="/photos" element={<PhotosPage />} />
             <Route path="/portal" element={<CustomerPortalPage />} />
             <Route path="/reports" element={<ReportsPage />} />
