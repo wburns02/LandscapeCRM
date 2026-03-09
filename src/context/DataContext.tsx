@@ -238,12 +238,13 @@ function getDemoData(): {
   ];
 
   const equipment: Equipment[] = [
-    { id: '1', name: 'John Deere Z930M', type: 'Zero-Turn Mower', make: 'John Deere', model: 'Z930M', serial_number: 'JD-2024-001', purchase_date: '2024-03-15', purchase_price: 12500, status: 'in_use', assigned_crew_id: '1', hours_used: 1850, last_maintenance: '2026-02-15', next_maintenance: '2026-03-15', created_at: '2024-03-15T00:00:00Z' },
-    { id: '2', name: 'Kubota SVL75-2', type: 'Skid Steer', make: 'Kubota', model: 'SVL75-2', serial_number: 'KU-2023-001', purchase_date: '2023-08-01', purchase_price: 48000, status: 'available', hours_used: 920, last_maintenance: '2026-02-01', next_maintenance: '2026-04-01', created_at: '2023-08-01T00:00:00Z' },
-    { id: '3', name: 'Stihl MS 261', type: 'Chainsaw', make: 'Stihl', model: 'MS 261', serial_number: 'ST-2025-003', purchase_date: '2025-01-10', purchase_price: 650, status: 'in_use', assigned_crew_id: '3', hours_used: 180, last_maintenance: '2026-01-20', next_maintenance: '2026-03-20', created_at: '2025-01-10T00:00:00Z' },
-    { id: '4', name: 'Toro Dingo TX 525', type: 'Compact Loader', make: 'Toro', model: 'Dingo TX 525', serial_number: 'TO-2024-002', purchase_date: '2024-06-20', purchase_price: 22000, status: 'maintenance', hours_used: 650, last_maintenance: '2026-03-01', next_maintenance: '2026-03-10', notes: 'Track replacement in progress', created_at: '2024-06-20T00:00:00Z' },
-    { id: '5', name: 'Exmark Lazer Z 60"', type: 'Zero-Turn Mower', make: 'Exmark', model: 'Lazer Z', purchase_date: '2023-04-01', purchase_price: 14200, status: 'in_use', assigned_crew_id: '2', hours_used: 2200, last_maintenance: '2026-02-20', next_maintenance: '2026-03-20', created_at: '2023-04-01T00:00:00Z' },
-    { id: '6', name: 'Vermeer BC700XL', type: 'Wood Chipper', make: 'Vermeer', model: 'BC700XL', purchase_date: '2022-09-15', purchase_price: 28000, status: 'available', hours_used: 480, last_maintenance: '2026-01-15', next_maintenance: '2026-04-15', created_at: '2022-09-15T00:00:00Z' },
+    { id: '1', name: '2024 Ford F-250 XLT', type: 'Vehicle', make: 'Ford', model: 'F-250 XLT', year: 2024, serial_number: '1FT7W2B6XRED12345', purchase_date: '2024-01-20', purchase_price: 52000, status: 'in_use', assigned_crew_id: '1', fuel_type: 'Diesel', hours_used: 4200, last_maintenance: '2026-02-10', next_maintenance: '2026-05-10', notes: 'Crew cab, long bed, tow package. Assigned to Alpha Crew.', created_at: '2024-01-20T00:00:00Z' },
+    { id: '2', name: 'John Deere Z930M Zero-Turn Mower', type: 'Zero-Turn Mower', make: 'John Deere', model: 'Z930M', year: 2024, serial_number: 'JD-Z930M-2024-0587', purchase_date: '2024-03-15', purchase_price: 12500, status: 'in_use', assigned_crew_id: '1', fuel_type: 'Gasoline', hours_used: 1850, last_maintenance: '2026-02-15', next_maintenance: '2026-03-15', notes: '60" MOD deck, suspension seat, Michelin X Tweel turf tires.', created_at: '2024-03-15T00:00:00Z' },
+    { id: '3', name: 'Stihl BR 800 Backpack Blower', type: 'Handheld', make: 'Stihl', model: 'BR 800 C-E Magnum', year: 2025, serial_number: 'ST-BR800-50921', purchase_date: '2025-02-01', purchase_price: 650, status: 'available', fuel_type: 'Gas/Oil Mix', hours_used: 320, last_maintenance: '2026-01-20', next_maintenance: '2026-04-20', notes: 'Good condition. Most powerful backpack blower in fleet.', created_at: '2025-02-01T00:00:00Z' },
+    { id: '4', name: 'Echo SRM-2620 String Trimmer', type: 'Handheld', make: 'Echo', model: 'SRM-2620', year: 2025, serial_number: 'EC-SRM-2620-73104', purchase_date: '2025-04-10', purchase_price: 380, status: 'in_use', assigned_crew_id: '2', fuel_type: 'Gas/Oil Mix', hours_used: 210, last_maintenance: '2026-02-28', next_maintenance: '2026-05-28', notes: 'Speed-Feed 450 head, i-30 starter.', created_at: '2025-04-10T00:00:00Z' },
+    { id: '5', name: 'Husqvarna 572XP Chainsaw', type: 'Chainsaw', make: 'Husqvarna', model: '572XP', year: 2024, serial_number: 'HQ-572XP-2024-1188', purchase_date: '2024-09-05', purchase_price: 1100, status: 'available', hours_used: 145, last_maintenance: '2026-01-10', next_maintenance: '2026-04-10', notes: '24" bar, AutoTune, excellent condition. Used for large tree removals.', created_at: '2024-09-05T00:00:00Z' },
+    { id: '6', name: 'Toro Dingo TX 1000', type: 'Compact Utility Loader', make: 'Toro', model: 'Dingo TX 1000', year: 2023, serial_number: 'TO-TX1000-2023-4402', purchase_date: '2023-06-15', purchase_price: 32000, status: 'maintenance', hours_used: 980, last_maintenance: '2026-03-01', next_maintenance: '2026-03-10', notes: 'Narrow track, fits through 36" gates. Hydraulic issue — parts on order.', created_at: '2023-06-15T00:00:00Z' },
+    { id: '7', name: '16ft Landscape Trailer', type: 'Trailer', make: 'Big Tex', model: '70LR-16', year: 2023, serial_number: 'BT-70LR-2023-9917', purchase_date: '2023-03-01', purchase_price: 4800, status: 'in_use', assigned_crew_id: '1', hours_used: 0, last_maintenance: '2026-01-05', next_maintenance: '2026-07-05', notes: 'Tandem axle, mesh sides, ramp gate. Carries mowers + equipment for Alpha Crew.', created_at: '2023-03-01T00:00:00Z' },
   ];
 
   const leads: Lead[] = [
@@ -339,15 +340,6 @@ function getDemoData(): {
       { month: 'Jan', revenue: 28500, expenses: 18200 },
       { month: 'Feb', revenue: 32400, expenses: 19800 },
       { month: 'Mar', revenue: 12450, expenses: 8100 },
-      { month: 'Apr', revenue: 0, expenses: 0 },
-      { month: 'May', revenue: 0, expenses: 0 },
-      { month: 'Jun', revenue: 0, expenses: 0 },
-      { month: 'Jul', revenue: 0, expenses: 0 },
-      { month: 'Aug', revenue: 0, expenses: 0 },
-      { month: 'Sep', revenue: 0, expenses: 0 },
-      { month: 'Oct', revenue: 0, expenses: 0 },
-      { month: 'Nov', revenue: 0, expenses: 0 },
-      { month: 'Dec', revenue: 0, expenses: 0 },
     ],
     job_status_distribution: [
       { status: 'Scheduled', count: 4 },

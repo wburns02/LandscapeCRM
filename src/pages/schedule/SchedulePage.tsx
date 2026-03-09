@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, Save, X } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
@@ -16,6 +17,7 @@ type ViewMode = 'week' | 'month';
 
 export default function SchedulePage() {
   const { jobs, crews, refreshJobs } = useData();
+  const navigate = useNavigate();
   const toast = useToast();
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -33,7 +35,7 @@ export default function SchedulePage() {
   const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const monthPaddingBefore = getDay(monthStart) === 0 ? 6 : getDay(monthStart) - 1;
 
-  const navigate = (dir: 'prev' | 'next') => {
+  const navigateDate = (dir: 'prev' | 'next') => {
     if (viewMode === 'week') {
       setCurrentDate(dir === 'next' ? addWeeks(currentDate, 1) : subWeeks(currentDate, 1));
     } else {
@@ -99,7 +101,7 @@ export default function SchedulePage() {
       {/* Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('prev')} className="p-2 hover:bg-earth-800 rounded-lg text-earth-300 cursor-pointer">
+          <button onClick={() => navigateDate('prev')} className="p-2 hover:bg-earth-800 rounded-lg text-earth-300 cursor-pointer">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <h2 className="text-lg font-semibold font-display text-earth-100 min-w-[200px] text-center">
@@ -108,7 +110,7 @@ export default function SchedulePage() {
               : format(currentDate, 'MMMM yyyy')
             }
           </h2>
-          <button onClick={() => navigate('next')} className="p-2 hover:bg-earth-800 rounded-lg text-earth-300 cursor-pointer">
+          <button onClick={() => navigateDate('next')} className="p-2 hover:bg-earth-800 rounded-lg text-earth-300 cursor-pointer">
             <ChevronRight className="w-5 h-5" />
           </button>
           <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())}>Today</Button>
@@ -156,8 +158,8 @@ export default function SchedulePage() {
                       {dayJobs.map(job => (
                         <div
                           key={job.id}
-                          onClick={() => openJobModal(job)}
-                          className="p-2 rounded-lg text-xs cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-green-500/40 transition-all"
+                          onClick={() => navigate(`/jobs/${job.id}`)}
+                          className="p-2 rounded-lg text-xs cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-green-500/40 hover:scale-[1.02] transition-all"
                           style={{ backgroundColor: `${job.crew?.color || '#a68360'}22`, borderLeft: `3px solid ${job.crew?.color || '#a68360'}` }}
                         >
                           <p className="font-medium text-earth-100 truncate">{job.title}</p>
@@ -195,8 +197,8 @@ export default function SchedulePage() {
                       {dayJobs.slice(0, 3).map(job => (
                         <div
                           key={job.id}
-                          onClick={() => openJobModal(job)}
-                          className="text-[10px] px-1.5 py-0.5 rounded mb-0.5 truncate cursor-pointer hover:ring-1 hover:ring-green-500/40 transition-all"
+                          onClick={() => navigate(`/jobs/${job.id}`)}
+                          className="text-[10px] px-1.5 py-0.5 rounded mb-0.5 truncate cursor-pointer hover:ring-1 hover:ring-green-500/40 hover:brightness-125 transition-all"
                           style={{ backgroundColor: `${job.crew?.color || '#a68360'}22`, color: job.crew?.color || '#a68360' }}
                         >
                           {job.title}
@@ -226,7 +228,7 @@ export default function SchedulePage() {
             ) : (
               <div className="space-y-3">
                 {todaysJobs.map(job => (
-                  <div key={job.id} onClick={() => openJobModal(job)} className="p-2.5 rounded-lg bg-earth-800/30 cursor-pointer hover:bg-earth-800/50 transition-colors">
+                  <div key={job.id} onClick={() => navigate(`/jobs/${job.id}`)} className="p-2.5 rounded-lg bg-earth-800/30 cursor-pointer hover:bg-earth-800/50 hover:ring-1 hover:ring-green-500/30 transition-all">
                     <p className="text-sm font-medium text-earth-100">{job.title}</p>
                     <div className="flex items-center gap-2 mt-1 text-xs text-earth-400">
                       <Clock className="w-3 h-3" />{job.scheduled_time || '8:00'}

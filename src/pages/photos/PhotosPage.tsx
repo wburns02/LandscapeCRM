@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Camera, Upload, Trees, Flower2, Shovel, Sun } from 'lucide-react';
+import { Camera, Upload, Trees, Flower2, Shovel, Sun, ImagePlus } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
+import Modal from '../../components/ui/Modal';
 import EmptyState from '../../components/ui/EmptyState';
 import { format } from 'date-fns';
 import type { Photo } from '../../types';
@@ -37,31 +40,126 @@ function PhotoPlaceholder({ photo }: { photo: Photo }) {
 }
 
 export default function PhotosPage() {
-  const { photos } = useData();
+  const { photos, jobs } = useData();
   const toast = useToast();
   const [activeFilter, setActiveFilter] = useState<string>('All');
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [localPhotos, setLocalPhotos] = useState<Photo[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const [uploadJobId, setUploadJobId] = useState('');
+  const [uploadType, setUploadType] = useState<Photo['type']>('before');
+  const [uploadCaption, setUploadCaption] = useState('');
+
+  const allPhotos = [...photos, ...localPhotos];
 
   const filteredPhotos = activeFilter === 'All'
-    ? photos
-    : photos.filter(p => p.type === activeFilter.toLowerCase());
+    ? allPhotos
+    : allPhotos.filter(p => p.type === activeFilter.toLowerCase());
+
+  const jobOptions = jobs.map(j => ({ value: j.id, label: j.title }));
+  const typeOptions: { value: Photo['type']; label: string }[] = [
+    { value: 'before', label: 'Before' },
+    { value: 'after', label: 'After' },
+    { value: 'progress', label: 'Progress' },
+  ];
+
+  function openUploadModal() {
+    setUploadJobId('');
+    setUploadType('before');
+    setUploadCaption('');
+    setDragOver(false);
+    setUploadOpen(true);
+  }
+
+  function handleSavePhoto() {
+    const selectedJob = jobs.find(j => j.id === uploadJobId);
+    const newPhoto: Photo = {
+      id: `local-${Date.now()}`,
+      url: '',
+      caption: uploadCaption || 'Uploaded photo',
+      type: uploadType,
+      job_id: uploadJobId || undefined,
+      job_name: selectedJob?.title,
+      uploaded_by: 'Demo User',
+      created_at: new Date().toISOString(),
+    };
+    setLocalPhotos(prev => [newPhoto, ...prev]);
+    setUploadOpen(false);
+    toast.success('Photo added successfully');
+  }
 
   return (
     <div className="space-y-6">
+      {/* Upload Modal */}
+      <Modal
+        isOpen={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        title="Upload Photo"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setUploadOpen(false)}>Cancel</Button>
+            <Button onClick={handleSavePhoto}>Save Photo</Button>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          {/* Drag-and-drop zone */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); }}
+            className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors ${
+              dragOver
+                ? 'border-green-500 bg-green-500/10'
+                : 'border-earth-600 bg-earth-800/30 hover:border-earth-500'
+            }`}
+          >
+            <ImagePlus className="w-10 h-10 text-earth-400" />
+            <div className="text-center">
+              <p className="text-sm font-medium text-earth-200">Drag & drop a photo here</p>
+              <p className="text-xs text-earth-500 mt-1">or click to browse (demo mode)</p>
+            </div>
+          </div>
+
+          <Select
+            label="Job"
+            placeholder="Select a job (optional)"
+            options={jobOptions}
+            value={uploadJobId}
+            onChange={(e) => setUploadJobId(e.target.value)}
+          />
+
+          <Select
+            label="Type"
+            options={typeOptions}
+            value={uploadType}
+            onChange={(e) => setUploadType(e.target.value as Photo['type'])}
+          />
+
+          <Input
+            label="Caption"
+            placeholder="Describe this photo..."
+            value={uploadCaption}
+            onChange={(e) => setUploadCaption(e.target.value)}
+          />
+        </div>
+      </Modal>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-earth-100">Photos</h2>
-          <p className="text-sm text-earth-400">{photos.length} photos</p>
+          <p className="text-sm text-earth-400">{allPhotos.length} photos</p>
         </div>
-        <Button icon={<Upload className="w-4 h-4" />} onClick={() => toast.info('Photo upload coming soon')}>Upload Photos</Button>
+        <Button icon={<Upload className="w-4 h-4" />} onClick={openUploadModal}>Upload Photos</Button>
       </div>
 
-      {photos.length === 0 ? (
+      {allPhotos.length === 0 ? (
         <EmptyState
           icon={<Camera className="w-10 h-10" />}
           title="No photos yet"
           description="Upload before and after photos from your jobs to build a portfolio and show customers your work."
           actionLabel="Upload Photos"
-          onAction={() => toast.info('Photo upload coming soon')}
+          onAction={openUploadModal}
         />
       ) : (
         <>

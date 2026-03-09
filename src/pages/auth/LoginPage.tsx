@@ -11,10 +11,12 @@ export default function LoginPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('gs_remembered_email') || '');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem('gs_remembered_email'));
+  const [showForgot, setShowForgot] = useState(false);
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
 
@@ -33,6 +35,11 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     try {
+      if (rememberMe) {
+        localStorage.setItem('gs_remembered_email', email);
+      } else {
+        localStorage.removeItem('gs_remembered_email');
+      }
       await login(email, password);
       navigate(from, { replace: true });
     } catch {
@@ -111,13 +118,28 @@ export default function LoginPage() {
             </div>
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm text-earth-300 cursor-pointer">
-                <input type="checkbox" className="rounded border-earth-600 bg-earth-800 text-green-600" />
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-earth-600 bg-earth-800 text-green-600"
+                />
                 Remember me
               </label>
-              <button type="button" className="text-sm text-green-400 hover:text-green-300 cursor-pointer">
+              <button
+                type="button"
+                onClick={() => setShowForgot(true)}
+                className="text-sm text-green-400 hover:text-green-300 cursor-pointer"
+              >
                 Forgot password?
               </button>
             </div>
+            {showForgot && (
+              <div className="p-3 rounded-lg bg-earth-800/80 border border-earth-700 text-sm text-earth-300">
+                <p>Enter your email above and contact your administrator to reset your password.</p>
+                <p className="text-earth-500 mt-1">For demo: use <span className="text-green-400">demo@landscapecrm.com</span> / <span className="text-green-400">demo</span></p>
+              </div>
+            )}
             <Button type="submit" className="w-full" size="lg" icon={<LogIn className="w-4 h-4" />} loading={isLoading}>
               Sign In
             </Button>
