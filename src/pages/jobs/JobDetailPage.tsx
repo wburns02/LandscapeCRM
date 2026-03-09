@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Calendar, Clock, DollarSign, Users, Camera, FileText, Edit, CheckCircle, PlayCircle, PauseCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Clock, DollarSign, Users, Camera, FileText, Edit, CheckCircle, PlayCircle, PauseCircle, Plus, MessageSquare, Upload } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
@@ -250,28 +250,174 @@ export default function JobDetailPage() {
         </div>
       )}
 
-      {activeTab === 'materials' && (
-        <Card>
-          <EmptyState icon={<FileText className="w-8 h-8" />} title="No materials tracked" description="Add materials used for this job to track costs." actionLabel="Add Material" onAction={() => toast.info('Material tracking coming soon')} />
-        </Card>
-      )}
+      {activeTab === 'materials' && (() => {
+        const demoMaterials = [
+          { id: '1', name: 'Bermuda Sod', quantity: 200, unit: 'sq ft', unitCost: 0.35 },
+          { id: '2', name: 'Hardwood Mulch', quantity: 5, unit: 'cu yd', unitCost: 22.00 },
+          { id: '3', name: 'River Rock (3/4")', quantity: 2, unit: 'tons', unitCost: 45.00 },
+          { id: '4', name: 'Landscape Fabric', quantity: 150, unit: 'sq ft', unitCost: 0.18 },
+          { id: '5', name: 'Drip Irrigation Kit', quantity: 1, unit: 'kit', unitCost: 85.00 },
+        ];
+        const totalMaterialsCost = demoMaterials.reduce((sum, m) => sum + m.quantity * m.unitCost, 0);
+        return (
+          <Card header={
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-earth-200">Materials Used</h3>
+              <Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => toast.info('Material tracking coming soon')}>Add Material</Button>
+            </div>
+          }>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-earth-800">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-earth-400">Material</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-earth-400">Quantity</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-earth-400">Unit Cost</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-earth-400">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-earth-800/50">
+                  {demoMaterials.map(m => (
+                    <tr key={m.id} className="hover:bg-earth-800/30 transition-colors">
+                      <td className="px-4 py-3 text-sm text-earth-100 font-medium">{m.name}</td>
+                      <td className="px-4 py-3 text-sm text-earth-200 text-right">{m.quantity} {m.unit}</td>
+                      <td className="px-4 py-3 text-sm text-earth-200 text-right">${m.unitCost.toFixed(2)}/{m.unit}</td>
+                      <td className="px-4 py-3 text-sm text-earth-100 text-right font-medium">${(m.quantity * m.unitCost).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-earth-700">
+                    <td colSpan={3} className="px-4 py-3 text-sm font-semibold text-earth-200 text-right">Total Materials Cost</td>
+                    <td className="px-4 py-3 text-sm font-bold text-green-400 text-right">${totalMaterialsCost.toFixed(2)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </Card>
+        );
+      })()}
 
-      {activeTab === 'time' && (
-        <Card>
-          <EmptyState icon={<Clock className="w-8 h-8" />} title="No time entries" description="Time entries will appear here when crew members clock in." />
-        </Card>
-      )}
+      {activeTab === 'time' && (() => {
+        const demoTimeEntries = [
+          { id: '1', crewMember: 'Carlos Ramirez', hours: 2.0, description: 'Mowing & edging', date: '2026-03-06' },
+          { id: '2', crewMember: 'Jake Wilson', hours: 1.5, description: 'Cleanup & debris removal', date: '2026-03-06' },
+          { id: '3', crewMember: 'Carlos Ramirez', hours: 3.0, description: 'Sod installation', date: '2026-03-07' },
+          { id: '4', crewMember: 'Maria Santos', hours: 2.5, description: 'Mulch spreading & bed prep', date: '2026-03-07' },
+          { id: '5', crewMember: 'Jake Wilson', hours: 2.0, description: 'Irrigation line setup', date: '2026-03-07' },
+        ];
+        const totalHours = demoTimeEntries.reduce((sum, e) => sum + e.hours, 0);
+        return (
+          <Card header={
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-earth-200">Time Entries</h3>
+              <Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => toast.info('Time logging coming soon')}>Log Time</Button>
+            </div>
+          }>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-earth-800">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-earth-400">Crew Member</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-earth-400">Hours</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-earth-400">Description</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-earth-400">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-earth-800/50">
+                  {demoTimeEntries.map(entry => (
+                    <tr key={entry.id} className="hover:bg-earth-800/30 transition-colors">
+                      <td className="px-4 py-3 text-sm text-earth-100 font-medium">{entry.crewMember}</td>
+                      <td className="px-4 py-3 text-sm text-earth-200 text-right">{entry.hours}h</td>
+                      <td className="px-4 py-3 text-sm text-earth-200">{entry.description}</td>
+                      <td className="px-4 py-3 text-sm text-earth-300">{format(new Date(entry.date), 'MMM d, yyyy')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-earth-700">
+                    <td className="px-4 py-3 text-sm font-semibold text-earth-200 text-right">Total Hours</td>
+                    <td className="px-4 py-3 text-sm font-bold text-green-400 text-right">{totalHours}h</td>
+                    <td colSpan={2} />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </Card>
+        );
+      })()}
 
       {activeTab === 'photos' && (
         <Card>
-          <EmptyState icon={<Camera className="w-8 h-8" />} title="No photos yet" description="Upload before and after photos for this job." actionLabel="Upload Photos" onAction={() => toast.info('Photo uploads coming soon')} />
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <div className="p-4 bg-earth-800/50 rounded-2xl text-earth-400 mb-4">
+              <Camera className="w-10 h-10" />
+            </div>
+            <h3 className="text-lg font-semibold font-display text-earth-200 mb-2">No photos for this job yet</h3>
+            <p className="text-sm text-earth-400 max-w-sm mb-6">
+              Capture before, during, and after photos to document the work and share progress with the customer.
+            </p>
+            <Button icon={<Upload className="w-4 h-4" />} onClick={() => toast.info('Photo uploads coming soon')}>Upload Photos</Button>
+          </div>
         </Card>
       )}
 
       {activeTab === 'notes' && (
-        <Card>
-          <p className="text-sm text-earth-200">{job.notes || 'No notes for this job.'}</p>
-        </Card>
+        <div className="space-y-4">
+          <Card header={
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-earth-200">Job Notes</h3>
+              <Badge color="earth">{job.notes ? '2 notes' : '1 note'}</Badge>
+            </div>
+          }>
+            <div className="space-y-4">
+              {/* Existing notes */}
+              <div className="p-4 bg-earth-800/40 rounded-lg border border-earth-700/50">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-earth-700/50 rounded-lg shrink-0">
+                    <MessageSquare className="w-4 h-4 text-earth-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-earth-100">Customer prefers we enter through back gate. Dog in yard — friendly. Leave gate closed when leaving.</p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-xs text-earth-400">Carlos Ramirez</span>
+                      <span className="text-xs text-earth-500">Mar 5, 2026 at 8:15 AM</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {job.notes && (
+                <div className="p-4 bg-earth-800/40 rounded-lg border border-earth-700/50">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-earth-700/50 rounded-lg shrink-0">
+                      <MessageSquare className="w-4 h-4 text-earth-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-earth-100">{job.notes}</p>
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="text-xs text-earth-400">System</span>
+                        <span className="text-xs text-earth-500">Mar 3, 2026 at 10:00 AM</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+          {/* Add Note form */}
+          <Card header={<h3 className="text-sm font-semibold text-earth-200">Add a Note</h3>}>
+            <div className="space-y-3">
+              <textarea
+                rows={3}
+                placeholder="Write a note about this job..."
+                className="w-full px-3.5 py-2.5 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-100 placeholder:text-earth-500 focus:outline-none focus:ring-2 focus:ring-green-500/40 focus:border-green-500/40 resize-none"
+              />
+              <div className="flex justify-end">
+                <Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => toast.info('Note saving coming soon')}>Add Note</Button>
+              </div>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Edit Modal */}
