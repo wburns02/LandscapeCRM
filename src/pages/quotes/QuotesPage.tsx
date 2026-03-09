@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { Plus, FileText, Send, CheckCircle, DollarSign, Trash2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
-import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -29,7 +28,7 @@ interface LineItemForm {
 }
 
 export default function QuotesPage() {
-  const { quotes, customers, addQuote, refreshQuotes } = useData();
+  const { quotes, customers, addQuote, addInvoice, updateQuote } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | QuoteStatus>('');
@@ -157,9 +156,8 @@ export default function QuotesPage() {
                     {quote.status === 'draft' && (
                       <Button variant="ghost" size="sm" icon={<Send className="w-3.5 h-3.5" />} onClick={async () => {
                         try {
-                          await api.patch(`/quotes/${quote.id}`, { status: 'sent', sent_at: new Date().toISOString() });
+                          await updateQuote(quote.id, { status: 'sent', sent_at: new Date().toISOString() });
                           toast.success('Quote sent');
-                          await refreshQuotes();
                         } catch { toast.error('Failed to send quote'); }
                       }}>
                         Send
@@ -168,9 +166,10 @@ export default function QuotesPage() {
                     {quote.status === 'accepted' && (
                       <Button variant="ghost" size="sm" icon={<DollarSign className="w-3.5 h-3.5" />} onClick={async () => {
                         try {
-                          await api.post('/invoices', {
+                          const customer = customers.find(c => c.id === quote.customer_id);
+                          await addInvoice({
                             customer_id: quote.customer_id,
-                            quote_id: quote.id,
+                            customer: customer,
                             line_items: quote.line_items,
                             subtotal: quote.subtotal,
                             tax_rate: quote.tax_rate,

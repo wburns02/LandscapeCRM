@@ -8,6 +8,10 @@ import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 
+function isDemoMode(): boolean {
+  return localStorage.getItem('gs_token') === 'demo_token';
+}
+
 type SettingsTab = 'company' | 'billing' | 'users' | 'appearance';
 
 export default function SettingsPage() {
@@ -35,6 +39,10 @@ export default function SettingsPage() {
   ];
 
   const handleSaveCompany = async () => {
+    if (isDemoMode()) {
+      toast.success('Company settings saved');
+      return;
+    }
     try {
       await api.put('/settings', {
         company_name: companyForm.company_name,
@@ -50,6 +58,10 @@ export default function SettingsPage() {
   };
 
   const handleSaveBilling = async () => {
+    if (isDemoMode()) {
+      toast.success('Billing settings saved');
+      return;
+    }
     try {
       await api.put('/settings', {
         tax_rate: parseFloat(billingForm.tax_rate) || 8.25,

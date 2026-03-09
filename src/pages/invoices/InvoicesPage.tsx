@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { Receipt, DollarSign, Send, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
-import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -32,7 +31,7 @@ interface LineItem {
 }
 
 export default function InvoicesPage() {
-  const { invoices, customers, addInvoice, recordPayment, refreshInvoices } = useData();
+  const { invoices, customers, addInvoice, updateInvoice, recordPayment } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | InvoiceStatus>('');
@@ -47,6 +46,54 @@ export default function InvoicesPage() {
   const [lineItems, setLineItems] = useState<LineItem[]>([
     { description: '', quantity: 1, unit_price: 0, total: 0 },
   ]);
+
+  // Record Payment modal state
+  const [paymentInvoice, setPaymentInvoice] = useState<typeof invoices[0] | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('credit_card');
+  const [paymentDate, setPaymentDate] = useState('');
+  const [paymentNotes, setPaymentNotes] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+
+  const openPaymentModal = (inv: typeof invoices[0]) => {
+    const balance = inv.total - (inv.amount_paid ?? 0);
+    setPaymentInvoice(inv);
+    setPaymentAmount(balance.toFixed(2));
+    setPaymentMethod('credit_card');
+    setPaymentDate(format(new Date(), 'yyyy-MM-dd'));
+    setPaymentNotes('');
+  };
+
+  const closePaymentModal = () => {
+    setPaymentInvoice(null);
+    setPaymentAmount('');
+    setPaymentNotes('');
+  };
+
+  const handleRecordPayment = async () => {
+    if (!paymentInvoice) return;
+    const amount = parseFloat(paymentAmount);
+    const balance = paymentInvoice.total - (paymentInvoice.amount_paid ?? 0);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid payment amount');
+      return;
+    }
+    if (amount > balance + 0.01) {
+      toast.error('Payment amount cannot exceed the balance due');
+      return;
+    }
+
+    setIsRecording(true);
+    try {
+      await recordPayment(paymentInvoice.id, amount);
+      toast.success(`Payment of $${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} recorded`);
+      closePaymentModal();
+    } catch {
+      toast.error('Failed to record payment');
+    } finally {
+      setIsRecording(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     return invoices.filter(inv => {
@@ -193,19 +240,13 @@ export default function InvoicesPage() {
                     {inv.status === 'draft' && (
                       <Button variant="ghost" size="sm" icon={<Send className="w-3.5 h-3.5" />} onClick={async () => {
                         try {
-                          await api.patch(`/invoices/${inv.id}`, { status: 'sent', sent_at: new Date().toISOString() });
+                          await updateInvoice(inv.id, { status: 'sent', sent_at: new Date().toISOString() });
                           toast.success('Invoice sent');
-                          await refreshInvoices();
                         } catch { toast.error('Failed to send invoice'); }
                       }}>Send</Button>
                     )}
                     {(inv.status === 'sent' || inv.status === 'overdue' || inv.status === 'partial') && (
-                      <Button variant="ghost" size="sm" icon={<DollarSign className="w-3.5 h-3.5" />} onClick={async () => {
-                        try {
-                          await recordPayment(inv.id, inv.total);
-                          toast.success('Payment recorded');
-                        } catch { toast.error('Failed to record payment'); }
-                      }}>Record Payment</Button>
+                      <Button variant="ghost" size="sm" icon={<DollarSign className="w-3.5 h-3.5" />} onClick={() => openPaymentModal(inv)}>Record Payment</Button>
                     )}
                   </div>
                 </div>
@@ -318,6 +359,90 @@ export default function InvoicesPage() {
             placeholder="Additional notes..."
           />
         </div>
+      </Modal>
+
+      {/* Record Payment Modal */}
+      <Modal
+        isOpen={!!paymentInvoice}
+        onClose={closePaymentModal}
+        title="Record Payment"
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={closePaymentModal}>Cancel</Button>
+            <Button onClick={handleRecordPayment} loading={isRecording}>Record Payment</Button>
+          </>
+        }
+      >
+        {paymentInvoice && (() => {
+          const balance = paymentInvoice.total - (paymentInvoice.amount_paid ?? 0);
+          return (
+            <div className="space-y-5">
+              {/* Invoice summary */}
+              <div className="bg-earth-800/50 border border-earth-700/50 rounded-xl p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-earth-400">Invoice</span>
+                  <span className="text-sm font-semibold text-earth-100">{paymentInvoice.invoice_number}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-earth-400">Customer</span>
+                  <span className="text-sm text-earth-200">{paymentInvoice.customer?.name ?? 'Unknown'}</span>
+                </div>
+                <div className="border-t border-earth-700/50 my-1" />
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-earth-400">Total Amount</span>
+                  <span className="text-sm text-earth-200">${paymentInvoice.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-earth-400">Amount Paid</span>
+                  <span className="text-sm text-green-400">${(paymentInvoice.amount_paid ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-earth-300">Balance Remaining</span>
+                  <span className="text-base font-bold text-amber-400">${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+
+              {/* Payment fields */}
+              <Input
+                label="Payment Amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                max={balance.toFixed(2)}
+                value={paymentAmount}
+                onChange={e => setPaymentAmount(e.target.value)}
+                hint={`Enter amount up to $${balance.toFixed(2)}`}
+              />
+
+              <Select
+                label="Payment Method"
+                options={[
+                  { value: 'cash', label: 'Cash' },
+                  { value: 'check', label: 'Check' },
+                  { value: 'credit_card', label: 'Credit Card' },
+                  { value: 'bank_transfer', label: 'Bank Transfer' },
+                ]}
+                value={paymentMethod}
+                onChange={e => setPaymentMethod(e.target.value)}
+              />
+
+              <Input
+                label="Payment Date"
+                type="date"
+                value={paymentDate}
+                onChange={e => setPaymentDate(e.target.value)}
+              />
+
+              <Input
+                label="Notes (optional)"
+                value={paymentNotes}
+                onChange={e => setPaymentNotes(e.target.value)}
+                placeholder="e.g., Check #1234, PO reference..."
+              />
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );
