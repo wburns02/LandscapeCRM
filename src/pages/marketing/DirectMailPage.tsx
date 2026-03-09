@@ -248,7 +248,7 @@ export default function DirectMailPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-display text-earth-50">Direct Mail</h1>
+          <h2 className="text-lg font-semibold text-earth-100">Direct Mail</h2>
           <p className="text-sm text-earth-400 mt-1">
             {campaigns.length} campaigns · {totalRecipients.toLocaleString()} total recipients · ${totalCost.toLocaleString()} estimated
           </p>

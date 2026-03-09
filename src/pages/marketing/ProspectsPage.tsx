@@ -183,7 +183,7 @@ export default function ProspectsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-display text-earth-50">Prospects</h1>
+          <h2 className="text-lg font-semibold text-earth-100">Prospects</h2>
           <p className="text-sm text-earth-400 mt-1">
             {total.toLocaleString()} Austin-metro property owners
             {stats ? ` · Avg score: ${stats.avg_lead_score}` : ''}
