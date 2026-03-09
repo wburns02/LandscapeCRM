@@ -108,8 +108,11 @@ interface DataContextType {
   addCrew: (data: Partial<Crew>) => Promise<Crew>;
   addEquipment: (data: Partial<Equipment>) => Promise<Equipment>;
   addLead: (data: Partial<Lead>) => Promise<Lead>;
+  updateLead: (leadId: string, data: Partial<Lead>) => Promise<void>;
   addInventoryItem: (data: Partial<InventoryItem>) => Promise<InventoryItem>;
   updateInventoryQuantity: (itemId: string, delta: number) => Promise<void>;
+  updateInvoice: (invoiceId: string, data: Partial<Invoice>) => Promise<void>;
+  updateQuote: (quoteId: string, data: Partial<Quote>) => Promise<void>;
   recordPayment: (invoiceId: string, amount: number) => Promise<void>;
   deleteCustomer: (customerId: string) => Promise<void>;
   deleteJob: (jobId: string) => Promise<void>;
@@ -794,6 +797,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateLead = useCallback(async (leadId: string, data: Partial<Lead>) => {
+    try {
+      await api.patch(`/leads/${leadId}`, {
+        status: data.status,
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        source: data.source,
+        service_interest: data.service_interest,
+        estimated_value: data.estimated_value,
+        notes: data.notes,
+        follow_up_date: data.follow_up_date,
+      });
+    } catch {
+      // API unavailable (demo mode) — continue with local update
+    }
+    setLeads(prev => prev.map(l =>
+      l.id === leadId ? { ...l, ...data, updated_at: new Date().toISOString() } : l
+    ));
+  }, []);
+
   const addInventoryItem = useCallback(async (data: Partial<InventoryItem>): Promise<InventoryItem> => {
     const newItem: InventoryItem = {
       id: generateId(),
@@ -844,6 +868,37 @@ export function DataProvider({ children }: { children: ReactNode }) {
         paid_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       } : inv
+    ));
+  }, []);
+
+  const updateInvoice = useCallback(async (invoiceId: string, data: Partial<Invoice>) => {
+    try {
+      await api.patch(`/invoices/${invoiceId}`, {
+        status: data.status,
+        sent_at: data.sent_at,
+        notes: data.notes,
+      });
+    } catch {
+      // API unavailable (demo mode) — continue with local update
+    }
+    setInvoices(prev => prev.map(inv =>
+      inv.id === invoiceId ? { ...inv, ...data, updated_at: new Date().toISOString() } : inv
+    ));
+  }, []);
+
+  const updateQuote = useCallback(async (quoteId: string, data: Partial<Quote>) => {
+    try {
+      await api.patch(`/quotes/${quoteId}`, {
+        status: data.status,
+        sent_at: data.sent_at,
+        accepted_at: data.accepted_at,
+        notes: data.notes,
+      });
+    } catch {
+      // API unavailable (demo mode) — continue with local update
+    }
+    setQuotes(prev => prev.map(q =>
+      q.id === quoteId ? { ...q, ...data, updated_at: new Date().toISOString() } : q
     ));
   }, []);
 
@@ -990,7 +1045,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         refreshContracts, refreshEquipment, refreshCrews, refreshSchedule,
         updateJobStatus, updateCustomer, updateJob,
         addCustomer, addJob, addQuote, addInvoice, addContract,
-        addCrew, addEquipment, addLead, addInventoryItem,
+        addCrew, addEquipment, addLead, updateLead, addInventoryItem,
+        updateInvoice, updateQuote,
         updateInventoryQuantity, recordPayment, deleteCustomer, deleteJob,
         recurringServices, addRecurringService, updateRecurringService, generateServiceVisit,
       }}

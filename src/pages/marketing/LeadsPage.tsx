@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Plus, Target, Phone, Mail, MapPin, ArrowRight, Grid, List, DollarSign } from 'lucide-react';
+import { useState, useMemo, useCallback, type DragEvent } from 'react';
+import { Plus, Target, Phone, Mail, MapPin, ArrowRight, Grid, List, DollarSign, GripVertical } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
@@ -24,7 +24,7 @@ const kanbanColumns: { status: LeadStatus; label: string; color: string }[] = [
 ];
 
 export default function LeadsPage() {
-  const { leads, addLead } = useData();
+  const { leads, addLead, updateLead } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
@@ -32,6 +32,10 @@ export default function LeadsPage() {
   const [formData, setFormData] = useState({
     name: '', phone: '', email: '', source: 'website' as LeadSource, service_interest: '', estimated_value: '',
   });
+
+  // Drag-and-drop state
+  const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
+  const [dropTargetStatus, setDropTargetStatus] = useState<LeadStatus | null>(null);
 
   const filtered = useMemo(() => {
     if (!search) return leads;
@@ -68,6 +72,60 @@ export default function LeadsPage() {
       toast.error(err instanceof Error ? err.message : 'Failed to create lead');
     }
   };
+
+  // --- Drag-and-drop handlers ---
+
+  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, leadId: string) => {
+    setDraggedLeadId(leadId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', leadId);
+    // Set a custom drag image with slight transparency
+    if (e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      e.dataTransfer.setDragImage(e.currentTarget, rect.width / 2, 20);
+    }
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedLeadId(null);
+    setDropTargetStatus(null);
+  }, []);
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>, status: LeadStatus) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropTargetStatus(status);
+  }, []);
+
+  const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+    // Only clear if we actually left the column (not entering a child)
+    const relatedTarget = e.relatedTarget as HTMLElement | null;
+    if (!e.currentTarget.contains(relatedTarget)) {
+      setDropTargetStatus(null);
+    }
+  }, []);
+
+  const handleDrop = useCallback(async (e: DragEvent<HTMLDivElement>, targetStatus: LeadStatus) => {
+    e.preventDefault();
+    const leadId = e.dataTransfer.getData('text/plain');
+    setDraggedLeadId(null);
+    setDropTargetStatus(null);
+
+    if (!leadId) return;
+
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead || lead.status === targetStatus) return;
+
+    const fromLabel = kanbanColumns.find(c => c.status === lead.status)?.label || lead.status;
+    const toLabel = kanbanColumns.find(c => c.status === targetStatus)?.label || targetStatus;
+
+    try {
+      await updateLead(leadId, { status: targetStatus });
+      toast.success(`"${lead.name}" moved from ${fromLabel} to ${toLabel}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update lead');
+    }
+  }, [leads, updateLead, toast]);
 
   const sourceColors: Record<LeadSource, 'green' | 'sky' | 'amber' | 'earth' | 'purple' | 'red'> = {
     website: 'sky', referral: 'green', google: 'amber', social_media: 'purple',
@@ -114,39 +172,71 @@ export default function LeadsPage() {
         <div className="flex gap-4 overflow-x-auto pb-4">
           {kanbanColumns.map(col => {
             const colLeads = filtered.filter(l => l.status === col.status);
+            const isDropTarget = dropTargetStatus === col.status && draggedLeadId !== null;
+            // Don't highlight the column the card is already in
+            const draggedLead = draggedLeadId ? leads.find(l => l.id === draggedLeadId) : null;
+            const isSameColumn = draggedLead?.status === col.status;
+            const showDropHighlight = isDropTarget && !isSameColumn;
+
             return (
-              <div key={col.status} className="min-w-[280px] flex-shrink-0">
+              <div
+                key={col.status}
+                className={`min-w-[280px] flex-shrink-0 rounded-lg transition-colors duration-150 ${
+                  showDropHighlight
+                    ? 'bg-green-600/10 border border-green-500/30'
+                    : 'border border-transparent'
+                }`}
+                onDragOver={(e) => handleDragOver(e, col.status)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, col.status)}
+              >
                 <div className={`px-3 py-2 rounded-t-lg border-t-2 ${col.color} bg-earth-900/60`}>
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-earth-200">{col.label}</h3>
                     <span className="text-xs text-earth-400 bg-earth-800 px-2 py-0.5 rounded-full">{colLeads.length}</span>
                   </div>
                 </div>
-                <div className="space-y-2 mt-2">
-                  {colLeads.map(lead => (
-                    <Card key={lead.id} hover className="!rounded-lg">
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between">
-                          <h4 className="text-sm font-medium text-earth-100">{lead.name}</h4>
-                          <Badge color={sourceColors[lead.source as LeadSource]}>{lead.source.replace('_', ' ')}</Badge>
-                        </div>
-                        <p className="text-xs text-earth-400 line-clamp-2">{lead.service_interest}</p>
-                        {lead.estimated_value && (
-                          <p className="text-xs font-medium text-green-400 flex items-center gap-1">
-                            <DollarSign className="w-3 h-3" />${lead.estimated_value.toLocaleString()}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 text-xs text-earth-500">
-                          <Phone className="w-3 h-3" />{lead.phone}
-                        </div>
-                        {lead.follow_up_date && (
-                          <p className="text-[10px] text-amber-400">
-                            Follow up: {format(new Date(lead.follow_up_date), 'MMM d')}
-                          </p>
-                        )}
+                <div className="space-y-2 mt-2 min-h-[60px] px-0.5">
+                  {colLeads.map(lead => {
+                    const isDragging = draggedLeadId === lead.id;
+                    return (
+                      <div
+                        key={lead.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, lead.id)}
+                        onDragEnd={handleDragEnd}
+                        className={`transition-all duration-150 ${
+                          isDragging ? 'opacity-50 ring-2 ring-green-500 rounded-lg' : ''
+                        }`}
+                      >
+                        <Card hover className="!rounded-lg cursor-grab active:cursor-grabbing">
+                          <div className="space-y-2">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <GripVertical className="w-3.5 h-3.5 text-earth-600 flex-shrink-0" />
+                                <h4 className="text-sm font-medium text-earth-100">{lead.name}</h4>
+                              </div>
+                              <Badge color={sourceColors[lead.source as LeadSource]}>{lead.source.replace('_', ' ')}</Badge>
+                            </div>
+                            <p className="text-xs text-earth-400 line-clamp-2">{lead.service_interest}</p>
+                            {lead.estimated_value && (
+                              <p className="text-xs font-medium text-green-400 flex items-center gap-1">
+                                <DollarSign className="w-3 h-3" />${lead.estimated_value.toLocaleString()}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2 text-xs text-earth-500">
+                              <Phone className="w-3 h-3" />{lead.phone}
+                            </div>
+                            {lead.follow_up_date && (
+                              <p className="text-[10px] text-amber-400">
+                                Follow up: {format(new Date(lead.follow_up_date), 'MMM d')}
+                              </p>
+                            )}
+                          </div>
+                        </Card>
                       </div>
-                    </Card>
-                  ))}
+                    );
+                  })}
                   {colLeads.length === 0 && (
                     <p className="text-xs text-earth-500 text-center py-6">No leads</p>
                   )}
