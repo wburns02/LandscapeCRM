@@ -35,6 +35,7 @@ import RecurringBillingPage from './pages/billing/RecurringBillingPage';
 import SalesPipelinePage from './pages/pipeline/SalesPipelinePage';
 import RoutePlannerPage from './pages/route-planner/RoutePlannerPage';
 import BusinessInsightsPage from './pages/insights/BusinessInsightsPage';
+import SmartEstimatorPage from './pages/estimator/SmartEstimatorPage';
 import SettingsPage from './pages/settings/SettingsPage';
 
 const pageTitles: Record<string, string> = {
@@ -59,6 +60,7 @@ const pageTitles: Record<string, string> = {
   '/job-costing': 'Job Costing',
   '/recurring-billing': 'Recurring Billing',
   '/pipeline': 'Sales Pipeline',
+  '/estimator': 'Smart Estimator',
   '/route-planner': 'Route Planner',
   '/insights': 'Business Intelligence',
   '/photos': 'Photos',
@@ -106,6 +108,7 @@ function AppLayout() {
             <Route path="/pipeline" element={<SalesPipelinePage />} />
             <Route path="/route-planner" element={<RoutePlannerPage />} />
             <Route path="/insights" element={<BusinessInsightsPage />} />
+            <Route path="/estimator" element={<SmartEstimatorPage />} />
             <Route path="/photos" element={<PhotosPage />} />
             <Route path="/portal" element={<CustomerPortalPage />} />
             <Route path="/reports" element={<ReportsPage />} />

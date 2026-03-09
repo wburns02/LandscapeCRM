@@ -5,6 +5,7 @@ import {
   Receipt, FileSignature, UsersRound, Wrench, Target, UserSearch, Mail,
   RefreshCw, Send, Camera, BarChart3, Settings, Menu, X, ChevronLeft, ChevronDown,
   Timer, ClipboardList, Globe, BadgeDollarSign, Calculator, Repeat, GitPullRequest, Route, Lightbulb,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -42,6 +43,7 @@ const navSections: NavSection[] = [
   {
     title: 'Financial',
     items: [
+      { to: '/estimator', icon: Sparkles, label: 'Estimator' },
       { to: '/quotes', icon: FileText, label: 'Quotes' },
       { to: '/invoices', icon: Receipt, label: 'Invoices' },
       { to: '/contracts', icon: FileSignature, label: 'Contracts' },
