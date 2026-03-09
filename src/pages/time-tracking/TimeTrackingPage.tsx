@@ -3,7 +3,7 @@ import {
   Clock, Play, Square, Plus, DollarSign, TrendingUp,
   Timer, CalendarDays, BarChart3,
 } from 'lucide-react';
-import { format, differenceInMinutes, differenceInSeconds, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+import { format, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
@@ -224,11 +224,12 @@ export default function TimeTrackingPage() {
   // Active timers = entries with no clock_out
   const activeTimers = useMemo(() => timeEntries.filter(e => !e.clock_out), [timeEntries]);
 
-  // This week's entries
+  // Recent completed entries for KPIs
   const thisWeek = useMemo(() => {
-    const start = startOfWeek(new Date(), { weekStartsOn: 1 });
-    const end = endOfWeek(new Date(), { weekStartsOn: 1 });
-    return timeEntries.filter(e => e.clock_out && isWithinInterval(new Date(e.clock_in), { start, end }));
+    const now = new Date();
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - 14);
+    return timeEntries.filter(e => e.clock_out && new Date(e.clock_in) >= cutoff);
   }, [timeEntries]);
 
   // KPIs
@@ -429,13 +430,13 @@ export default function TimeTrackingPage() {
           color={activeTimers.length > 0 ? 'green' : 'earth'}
         />
         <StatCard
-          title="Hours This Week"
+          title="Hours (Recent)"
           value={`${totalHoursThisWeek.toFixed(0)}h`}
           icon={<Clock className="w-5 h-5" />}
           color="sky"
         />
         <StatCard
-          title="Labor Cost (Week)"
+          title="Labor Cost (Recent)"
           value={`$${totalLaborCostThisWeek.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
           icon={<DollarSign className="w-5 h-5" />}
           color="amber"

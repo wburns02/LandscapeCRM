@@ -353,7 +353,7 @@ export default function ProposalBuilderPage() {
                     <p className="text-xs text-earth-400 uppercase tracking-wider">{status}</p>
                     <Badge color={statusColors[status]}>{count}</Badge>
                   </div>
-                  <p className="text-xl font-bold text-earth-100">${total.toLocaleString()}</p>
+                  <p className="text-xl font-bold text-earth-100">${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
               </Card>
             );
@@ -366,30 +366,34 @@ export default function ProposalBuilderPage() {
             const total = p.sections.reduce((sum, s) => sum + s.items.reduce((si, i) => si + i.total, 0), 0);
             return (
               <Card key={p.id} hover onClick={() => { setActiveProposal(p); setShowPreview(true); }}>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-green-600/15 flex items-center justify-center shrink-0">
-                    <FileText className="w-5 h-5 text-green-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-earth-100 truncate">{p.title}</p>
-                      <Badge color={statusColors[p.status]}>{p.status}</Badge>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-green-600/15 flex items-center justify-center shrink-0">
+                      <FileText className="w-5 h-5 text-green-400" />
                     </div>
-                    <p className="text-xs text-earth-400">{p.customer_name} — {format(new Date(p.created_at), 'MMM d, yyyy')}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium text-earth-100 truncate">{p.title}</p>
+                        <Badge color={statusColors[p.status]}>{p.status}</Badge>
+                      </div>
+                      <p className="text-xs text-earth-400 truncate">{p.customer_name} — {format(new Date(p.created_at), 'MMM d, yyyy')}</p>
+                    </div>
                   </div>
-                  <p className="text-lg font-bold text-earth-100 shrink-0">${total.toLocaleString()}</p>
-                  <div className="flex gap-1 shrink-0">
-                    <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); editProposal(p); }}>
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); duplicateProposal(p); }}>
-                      <Copy className="w-3.5 h-3.5" />
-                    </Button>
-                    {p.status === 'draft' && (
-                      <Button size="sm" variant="primary" icon={<Send className="w-3.5 h-3.5" />} onClick={(e) => { e.stopPropagation(); sendProposal(p.id); }}>
-                        Send
+                  <div className="flex items-center gap-2 sm:gap-3 ml-13 sm:ml-0">
+                    <p className="text-lg font-bold text-earth-100 shrink-0">${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <div className="flex gap-1 shrink-0">
+                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); editProposal(p); }}>
+                        Edit
                       </Button>
-                    )}
+                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); duplicateProposal(p); }}>
+                        <Copy className="w-3.5 h-3.5" />
+                      </Button>
+                      {p.status === 'draft' && (
+                        <Button size="sm" variant="primary" icon={<Send className="w-3.5 h-3.5" />} onClick={(e) => { e.stopPropagation(); sendProposal(p.id); }}>
+                          Send
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>
