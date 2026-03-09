@@ -25,6 +25,7 @@ import DirectMailPage from './pages/marketing/DirectMailPage';
 import PhotosPage from './pages/photos/PhotosPage';
 import ReportsPage from './pages/reports/ReportsPage';
 import RecurringServicesPage from './pages/services/RecurringServicesPage';
+import TimeTrackingPage from './pages/time-tracking/TimeTrackingPage';
 import SettingsPage from './pages/settings/SettingsPage';
 
 const pageTitles: Record<string, string> = {
@@ -38,6 +39,7 @@ const pageTitles: Record<string, string> = {
   '/invoices': 'Invoices',
   '/contracts': 'Contracts',
   '/crews': 'Crews',
+  '/time-tracking': 'Time Tracking',
   '/equipment': 'Equipment',
   '/leads': 'Leads',
   '/prospects': 'Prospects',
@@ -74,6 +76,7 @@ function AppLayout() {
             <Route path="/invoices" element={<InvoicesPage />} />
             <Route path="/contracts" element={<ContractsPage />} />
             <Route path="/crews" element={<CrewsPage />} />
+            <Route path="/time-tracking" element={<TimeTrackingPage />} />
             <Route path="/equipment" element={<EquipmentPage />} />
             <Route path="/leads" element={<LeadsPage />} />
             <Route path="/prospects" element={<ProspectsPage />} />
