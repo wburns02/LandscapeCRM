@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import {
   Plus, Trash2, FileText, Send, Eye, Download, ChevronRight,
   ChevronLeft, GripVertical, DollarSign, Percent, Copy, Check,
-  Briefcase, Image, AlignLeft,
+  Briefcase, Image, AlignLeft, Pencil, AlertTriangle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useData } from '../../context/DataContext';
@@ -167,6 +167,23 @@ export default function ProposalBuilderPage() {
   const [builderStep, setBuilderStep] = useState<BuilderStep>('details');
   const [showPreview, setShowPreview] = useState(false);
   const [showBuilder, setShowBuilder] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingProposal, setDeletingProposal] = useState<Proposal | null>(null);
+
+  // Edit modal form state
+  const [editForm, setEditForm] = useState({
+    title: '',
+    customer_id: '',
+    notes: '',
+    terms: '',
+    valid_days: 30,
+    tax_rate: 8.25,
+    discount_percent: 0,
+    status: 'draft' as Proposal['status'],
+  });
+  const [editSections, setEditSections] = useState<ProposalSection[]>([]);
 
   // Builder form state
   const [form, setForm] = useState({
@@ -191,6 +208,11 @@ export default function ProposalBuilderPage() {
   const taxAmount = taxableAmount * (form.tax_rate / 100);
   const grandTotal = taxableAmount + taxAmount;
 
+  // Edit modal computed totals
+  const editSubtotal = useMemo(() =>
+    editSections.reduce((sum, s) => sum + s.items.reduce((si, item) => si + item.total, 0), 0),
+  [editSections]);
+
   // Open builder for new proposal
   const startNew = () => {
     setForm({
@@ -204,7 +226,7 @@ export default function ProposalBuilderPage() {
     setActiveProposal(null);
   };
 
-  // Edit existing
+  // Edit existing (opens builder view for full editing)
   const editProposal = (p: Proposal) => {
     setForm({
       title: p.title, customer_id: p.customer_id, notes: p.notes,
@@ -215,6 +237,113 @@ export default function ProposalBuilderPage() {
     setActiveProposal(p);
     setBuilderStep('details');
     setShowBuilder(true);
+  };
+
+  // Open edit modal
+  const openEditModal = (p: Proposal) => {
+    setEditingProposal(p);
+    setEditForm({
+      title: p.title,
+      customer_id: p.customer_id,
+      notes: p.notes,
+      terms: p.terms,
+      valid_days: p.valid_days,
+      tax_rate: p.tax_rate,
+      discount_percent: p.discount_percent,
+      status: p.status,
+    });
+    setEditSections(p.sections.map(s => ({
+      ...s,
+      items: s.items.map(i => ({ ...i })),
+    })));
+    setShowEditModal(true);
+  };
+
+  // Save from edit modal
+  const saveEditModal = () => {
+    if (!editingProposal) return;
+    if (!editForm.title || !editForm.customer_id) {
+      toast.error('Title and customer are required');
+      return;
+    }
+    const customer = customers.find(c => c.id === editForm.customer_id);
+    const updated: Proposal = {
+      ...editingProposal,
+      title: editForm.title,
+      customer_id: editForm.customer_id,
+      customer_name: customer?.name || editingProposal.customer_name,
+      sections: editSections,
+      notes: editForm.notes,
+      terms: editForm.terms,
+      valid_days: editForm.valid_days,
+      tax_rate: editForm.tax_rate,
+      discount_percent: editForm.discount_percent,
+      status: editForm.status,
+    };
+    setProposals(prev => prev.map(p => p.id === updated.id ? updated : p));
+    toast.success(`Proposal "${editForm.title}" updated`);
+    setShowEditModal(false);
+    setEditingProposal(null);
+  };
+
+  // Add line item in edit modal
+  const addEditItem = (sectionId: string) => {
+    setEditSections(prev => prev.map(s =>
+      s.id === sectionId
+        ? { ...s, items: [...s.items, { id: `i-${Date.now()}-${Math.random()}`, description: '', quantity: 1, unit: 'each', unit_price: 0, total: 0 }] }
+        : s
+    ));
+  };
+
+  // Update line item in edit modal
+  const updateEditItem = (sectionId: string, itemId: string, field: keyof LineItem, value: string | number) => {
+    setEditSections(prev => prev.map(s =>
+      s.id === sectionId
+        ? {
+            ...s,
+            items: s.items.map(item => {
+              if (item.id !== itemId) return item;
+              const upd = { ...item, [field]: value };
+              if (field === 'quantity' || field === 'unit_price') {
+                upd.total = Number(upd.quantity) * Number(upd.unit_price);
+              }
+              return upd;
+            }),
+          }
+        : s
+    ));
+  };
+
+  // Remove line item in edit modal
+  const removeEditItem = (sectionId: string, itemId: string) => {
+    setEditSections(prev => prev.map(s =>
+      s.id === sectionId ? { ...s, items: s.items.filter(i => i.id !== itemId) } : s
+    ));
+  };
+
+  // Add section in edit modal
+  const addEditSection = () => {
+    setEditSections(prev => [...prev, { id: `s-${Date.now()}`, title: '', description: '', items: [] }]);
+  };
+
+  // Remove section in edit modal
+  const removeEditSection = (sectionId: string) => {
+    if (editSections.length <= 1) return;
+    setEditSections(prev => prev.filter(s => s.id !== sectionId));
+  };
+
+  // Delete proposal
+  const confirmDeleteProposal = (p: Proposal) => {
+    setDeletingProposal(p);
+    setShowDeleteConfirm(true);
+  };
+
+  const executeDelete = () => {
+    if (!deletingProposal) return;
+    setProposals(prev => prev.filter(p => p.id !== deletingProposal.id));
+    toast.success(`Proposal "${deletingProposal.title}" deleted`);
+    setShowDeleteConfirm(false);
+    setDeletingProposal(null);
   };
 
   // Add line item
@@ -382,11 +511,14 @@ export default function ProposalBuilderPage() {
                   <div className="flex items-center gap-2 sm:gap-3 ml-13 sm:ml-0">
                     <p className="text-lg font-bold text-earth-100 shrink-0">${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     <div className="flex gap-1 shrink-0">
-                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); editProposal(p); }}>
+                      <Button size="sm" variant="ghost" icon={<Pencil className="w-3.5 h-3.5" />} onClick={(e) => { e.stopPropagation(); openEditModal(p); }}>
                         Edit
                       </Button>
                       <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); duplicateProposal(p); }}>
                         <Copy className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); confirmDeleteProposal(p); }}>
+                        <Trash2 className="w-3.5 h-3.5 text-red-400" />
                       </Button>
                       {p.status === 'draft' && (
                         <Button size="sm" variant="primary" icon={<Send className="w-3.5 h-3.5" />} onClick={(e) => { e.stopPropagation(); sendProposal(p.id); }}>
@@ -411,12 +543,280 @@ export default function ProposalBuilderPage() {
             footer={
               <>
                 <Button variant="secondary" onClick={() => setShowPreview(false)}>Close</Button>
+                <Button variant="secondary" icon={<Pencil className="w-4 h-4" />} onClick={() => { setShowPreview(false); openEditModal(activeProposal); }}>Edit</Button>
                 <Button variant="secondary" icon={<Copy className="w-4 h-4" />} onClick={() => { duplicateProposal(activeProposal); setShowPreview(false); }}>Duplicate</Button>
                 <Button icon={<Send className="w-4 h-4" />} onClick={() => { sendProposal(activeProposal.id); setShowPreview(false); }}>Send to Client</Button>
               </>
             }
           >
             <ProposalPreview proposal={activeProposal} />
+          </Modal>
+        )}
+
+        {/* Edit Modal */}
+        {showEditModal && editingProposal && (
+          <Modal
+            isOpen={showEditModal}
+            onClose={() => { setShowEditModal(false); setEditingProposal(null); }}
+            title="Edit Proposal"
+            size="xl"
+            footer={
+              <>
+                <Button variant="secondary" onClick={() => { setShowEditModal(false); setEditingProposal(null); }}>Cancel</Button>
+                <Button variant="secondary" onClick={() => {
+                  // Build a proposal with current edit form state to pass to the builder
+                  const customer = customers.find(c => c.id === editForm.customer_id);
+                  const updatedForBuilder: Proposal = {
+                    ...editingProposal,
+                    title: editForm.title,
+                    customer_id: editForm.customer_id,
+                    customer_name: customer?.name || editingProposal.customer_name,
+                    sections: editSections,
+                    notes: editForm.notes,
+                    terms: editForm.terms,
+                    valid_days: editForm.valid_days,
+                    tax_rate: editForm.tax_rate,
+                    discount_percent: editForm.discount_percent,
+                    status: editForm.status,
+                  };
+                  setShowEditModal(false);
+                  editProposal(updatedForBuilder);
+                }}>Open in Builder</Button>
+                <Button onClick={saveEditModal}>Save Changes</Button>
+              </>
+            }
+          >
+            <div className="space-y-6">
+              {/* Details Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-earth-300 uppercase tracking-wider">Details</h3>
+                <Input
+                  label="Proposal Title"
+                  value={editForm.title}
+                  onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="e.g., Complete Backyard Transformation"
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Select
+                    label="Customer"
+                    options={[
+                      { value: '', label: 'Select customer...' },
+                      ...customers.map(c => ({ value: c.id, label: c.name })),
+                    ]}
+                    value={editForm.customer_id}
+                    onChange={e => setEditForm(f => ({ ...f, customer_id: e.target.value }))}
+                  />
+                  <Select
+                    label="Status"
+                    options={[
+                      { value: 'draft', label: 'Draft' },
+                      { value: 'sent', label: 'Sent' },
+                      { value: 'viewed', label: 'Viewed' },
+                      { value: 'accepted', label: 'Accepted' },
+                      { value: 'declined', label: 'Declined' },
+                    ]}
+                    value={editForm.status}
+                    onChange={e => setEditForm(f => ({ ...f, status: e.target.value as Proposal['status'] }))}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Input
+                    label="Valid For (days)"
+                    type="number"
+                    value={String(editForm.valid_days)}
+                    onChange={e => setEditForm(f => ({ ...f, valid_days: parseInt(e.target.value) || 30 }))}
+                  />
+                  <Input
+                    label="Tax Rate (%)"
+                    type="number"
+                    value={String(editForm.tax_rate)}
+                    onChange={e => setEditForm(f => ({ ...f, tax_rate: parseFloat(e.target.value) || 0 }))}
+                  />
+                  <Input
+                    label="Discount (%)"
+                    type="number"
+                    value={String(editForm.discount_percent)}
+                    onChange={e => setEditForm(f => ({ ...f, discount_percent: parseFloat(e.target.value) || 0 }))}
+                  />
+                </div>
+              </div>
+
+              {/* Sections & Line Items */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-earth-300 uppercase tracking-wider">Sections & Line Items</h3>
+                {editSections.map((section) => (
+                  <div key={section.id} className="bg-earth-800/30 rounded-lg border border-earth-700/50 p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        value={section.title}
+                        onChange={e => setEditSections(prev => prev.map(s => s.id === section.id ? { ...s, title: e.target.value } : s))}
+                        className="flex-1 bg-transparent text-base font-semibold text-earth-100 border-none outline-none placeholder:text-earth-500"
+                        placeholder="Section title..."
+                      />
+                      {editSections.length > 1 && (
+                        <button onClick={() => removeEditSection(section.id)} className="text-earth-500 hover:text-red-400 cursor-pointer p-1">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {section.items.length > 0 && (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-earth-700/50">
+                              <th className="text-left py-2 text-xs text-earth-400 font-semibold w-[40%]">Description</th>
+                              <th className="text-right py-2 text-xs text-earth-400 font-semibold w-[12%]">Qty</th>
+                              <th className="text-left py-2 text-xs text-earth-400 font-semibold w-[12%] pl-2">Unit</th>
+                              <th className="text-right py-2 text-xs text-earth-400 font-semibold w-[15%]">Price</th>
+                              <th className="text-right py-2 text-xs text-earth-400 font-semibold w-[15%]">Total</th>
+                              <th className="w-8"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {section.items.map(item => (
+                              <tr key={item.id} className="border-b border-earth-800/50">
+                                <td className="py-1.5 pr-2">
+                                  <input
+                                    type="text"
+                                    value={item.description}
+                                    onChange={e => updateEditItem(section.id, item.id, 'description', e.target.value)}
+                                    className="w-full bg-earth-800/40 rounded px-2 py-1 text-sm text-earth-100 border border-earth-700/50 focus:border-green-500/50 outline-none"
+                                    placeholder="Item description..."
+                                  />
+                                </td>
+                                <td className="py-1.5 pr-1">
+                                  <input
+                                    type="number"
+                                    value={item.quantity}
+                                    onChange={e => updateEditItem(section.id, item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                                    className="w-full bg-earth-800/40 rounded px-2 py-1 text-sm text-earth-100 text-right border border-earth-700/50 focus:border-green-500/50 outline-none"
+                                  />
+                                </td>
+                                <td className="py-1.5 pr-1 pl-1">
+                                  <input
+                                    type="text"
+                                    value={item.unit}
+                                    onChange={e => updateEditItem(section.id, item.id, 'unit', e.target.value)}
+                                    className="w-full bg-earth-800/40 rounded px-2 py-1 text-sm text-earth-100 border border-earth-700/50 focus:border-green-500/50 outline-none"
+                                  />
+                                </td>
+                                <td className="py-1.5 pr-1">
+                                  <input
+                                    type="number"
+                                    value={item.unit_price}
+                                    onChange={e => updateEditItem(section.id, item.id, 'unit_price', parseFloat(e.target.value) || 0)}
+                                    className="w-full bg-earth-800/40 rounded px-2 py-1 text-sm text-earth-100 text-right border border-earth-700/50 focus:border-green-500/50 outline-none"
+                                    step="0.01"
+                                  />
+                                </td>
+                                <td className="py-1.5 text-right font-medium text-earth-100 pr-1 text-sm">
+                                  ${item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </td>
+                                <td className="py-1.5 text-center">
+                                  <button onClick={() => removeEditItem(section.id, item.id)} className="text-earth-500 hover:text-red-400 cursor-pointer p-1">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    <Button size="sm" variant="ghost" icon={<Plus className="w-3.5 h-3.5" />} onClick={() => addEditItem(section.id)}>
+                      Add Line Item
+                    </Button>
+
+                    {section.items.length > 0 && (
+                      <div className="flex justify-end pt-2 border-t border-earth-700/30">
+                        <p className="text-sm text-earth-300">
+                          Section total: <span className="font-semibold text-earth-100">${section.items.reduce((s, i) => s + i.total, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <Button size="sm" variant="secondary" icon={<Plus className="w-3.5 h-3.5" />} onClick={addEditSection}>
+                  Add Section
+                </Button>
+
+                {/* Total */}
+                <div className="bg-green-600/5 border border-green-500/20 rounded-lg p-4">
+                  <div className="flex justify-between text-sm text-earth-300">
+                    <span>Subtotal</span>
+                    <span>${editSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  {editForm.discount_percent > 0 && (
+                    <div className="flex justify-between text-sm text-amber-400 mt-1">
+                      <span>Discount ({editForm.discount_percent}%)</span>
+                      <span>-${(editSubtotal * editForm.discount_percent / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm text-earth-300 mt-1">
+                    <span>Tax ({editForm.tax_rate}%)</span>
+                    <span>${((editSubtotal - editSubtotal * editForm.discount_percent / 100) * editForm.tax_rate / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold text-earth-50 pt-2 mt-2 border-t border-green-500/20">
+                    <span>Total</span>
+                    <span>${((editSubtotal - editSubtotal * editForm.discount_percent / 100) * (1 + editForm.tax_rate / 100)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Terms Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-earth-300 uppercase tracking-wider">Notes & Terms</h3>
+                <div>
+                  <label className="block text-sm font-medium text-earth-200 mb-1.5">Notes & Scope</label>
+                  <textarea
+                    value={editForm.notes}
+                    onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))}
+                    className="w-full bg-earth-800/40 rounded-lg px-3 py-2 text-sm text-earth-100 border border-earth-700/50 focus:border-green-500/50 outline-none resize-none h-24"
+                    placeholder="Project scope, warranty information, special notes..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-earth-200 mb-1.5">Payment Terms</label>
+                  <textarea
+                    value={editForm.terms}
+                    onChange={e => setEditForm(f => ({ ...f, terms: e.target.value }))}
+                    className="w-full bg-earth-800/40 rounded-lg px-3 py-2 text-sm text-earth-100 border border-earth-700/50 focus:border-green-500/50 outline-none resize-none h-24"
+                    placeholder="Payment schedule, deposit requirements, timeline..."
+                  />
+                </div>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && deletingProposal && (
+          <Modal
+            isOpen={showDeleteConfirm}
+            onClose={() => { setShowDeleteConfirm(false); setDeletingProposal(null); }}
+            title="Delete Proposal"
+            size="sm"
+            footer={
+              <>
+                <Button variant="secondary" onClick={() => { setShowDeleteConfirm(false); setDeletingProposal(null); }}>Cancel</Button>
+                <Button variant="danger" onClick={executeDelete}>Delete</Button>
+              </>
+            }
+          >
+            <div className="flex flex-col items-center text-center gap-4 py-2">
+              <div className="w-12 h-12 rounded-full bg-red-500/15 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+              </div>
+              <div>
+                <p className="text-earth-100 font-medium mb-1">Are you sure you want to delete this proposal?</p>
+                <p className="text-sm text-earth-400">"{deletingProposal.title}" for {deletingProposal.customer_name}</p>
+              </div>
+              <p className="text-xs text-earth-500">This action cannot be undone.</p>
+            </div>
           </Modal>
         )}
       </div>

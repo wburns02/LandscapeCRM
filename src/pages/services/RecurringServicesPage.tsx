@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   RefreshCw, Plus, Search, Calendar, DollarSign, Clock, Users,
   Play, Pause, CheckCircle, ChevronRight, AlertTriangle, MapPin,
@@ -98,6 +98,28 @@ export default function RecurringServicesPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<FormData>(emptyForm);
+
+  // Close Create Modal on Escape key
+  useEffect(() => {
+    if (showModal) {
+      const handler = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setShowModal(false);
+      };
+      window.addEventListener('keydown', handler);
+      return () => window.removeEventListener('keydown', handler);
+    }
+  }, [showModal]);
+
+  // Close Detail Sidebar on Escape key
+  useEffect(() => {
+    if (selectedService) {
+      const handler = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setSelectedService(null);
+      };
+      window.addEventListener('keydown', handler);
+      return () => window.removeEventListener('keydown', handler);
+    }
+  }, [selectedService]);
 
   const filtered = useMemo(() => {
     let list = recurringServices || [];

@@ -350,18 +350,28 @@ export default function TimeTrackingPage() {
     setTimeEntries(prev => [entry, ...prev]);
     setShowClockInModal(false);
     setClockInForm({ crew_member_id: '', job_id: '' });
+    setActiveTab('timers');
     toast.success(`${member?.name} clocked in to ${job?.title}`);
   };
 
   // Clock Out
   const handleClockOut = (entryId: string) => {
+    const entry = timeEntries.find(e => e.id === entryId);
     setTimeEntries(prev => prev.map(e => {
       if (e.id !== entryId) return e;
       const clockOut = new Date().toISOString();
       const hours = parseFloat((differenceInMinutes(new Date(clockOut), new Date(e.clock_in)) / 60).toFixed(2));
       return { ...e, clock_out: clockOut, hours };
     }));
-    toast.success('Timer stopped');
+    const memberName = entry?.crew_member?.name || 'Crew member';
+    const duration = entry ? (() => {
+      const totalMin = differenceInMinutes(new Date(), new Date(entry.clock_in));
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    })() : '';
+    toast.success(`${memberName} clocked out${duration ? ` — ${duration} logged` : ''}`);
+    setActiveTab('entries');
   };
 
   // Log manual entry

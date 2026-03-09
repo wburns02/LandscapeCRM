@@ -46,6 +46,8 @@ export default function PhotosPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [localPhotos, setLocalPhotos] = useState<Photo[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [fileName, setFileName] = useState('');
   const [uploadJobId, setUploadJobId] = useState('');
   const [uploadType, setUploadType] = useState<Photo['type']>('before');
   const [uploadCaption, setUploadCaption] = useState('');
@@ -61,31 +63,58 @@ export default function PhotosPage() {
     { value: 'before', label: 'Before' },
     { value: 'after', label: 'After' },
     { value: 'progress', label: 'Progress' },
+    { value: 'property', label: 'Completed' },
   ];
 
   function openUploadModal() {
     setUploadJobId('');
     setUploadType('before');
     setUploadCaption('');
+    setFileName('');
     setDragOver(false);
+    setUploading(false);
     setUploadOpen(true);
   }
 
+  function handleFilePick() {
+    // Simulate picking a file — in demo mode we just set a fake filename
+    setFileName(`photo_${Date.now()}.jpg`);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    // Simulate receiving a dropped file
+    const file = e.dataTransfer?.files?.[0];
+    setFileName(file?.name || `dropped_photo_${Date.now()}.jpg`);
+  }
+
   function handleSavePhoto() {
-    const selectedJob = jobs.find(j => j.id === uploadJobId);
-    const newPhoto: Photo = {
-      id: `local-${Date.now()}`,
-      url: '',
-      caption: uploadCaption || 'Uploaded photo',
-      type: uploadType,
-      job_id: uploadJobId || undefined,
-      job_name: selectedJob?.title,
-      uploaded_by: 'Demo User',
-      created_at: new Date().toISOString(),
-    };
-    setLocalPhotos(prev => [newPhoto, ...prev]);
-    setUploadOpen(false);
-    toast.success('Photo added successfully');
+    if (!fileName) {
+      toast.error('Please select a photo to upload');
+      return;
+    }
+
+    setUploading(true);
+
+    // Simulate upload delay
+    setTimeout(() => {
+      const selectedJob = jobs.find(j => j.id === uploadJobId);
+      const newPhoto: Photo = {
+        id: `local-${Date.now()}`,
+        url: '',
+        caption: uploadCaption || 'Uploaded photo',
+        type: uploadType,
+        job_id: uploadJobId || undefined,
+        job_name: selectedJob?.title,
+        uploaded_by: 'Demo User',
+        created_at: new Date().toISOString(),
+      };
+      setLocalPhotos(prev => [newPhoto, ...prev]);
+      setUploading(false);
+      setUploadOpen(false);
+      toast.success('Photo uploaded successfully');
+    }, 1200);
   }
 
   return (
@@ -97,28 +126,45 @@ export default function PhotosPage() {
         title="Upload Photo"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setUploadOpen(false)}>Cancel</Button>
-            <Button onClick={handleSavePhoto}>Save Photo</Button>
+            <Button variant="secondary" onClick={() => setUploadOpen(false)} disabled={uploading}>Cancel</Button>
+            <Button onClick={handleSavePhoto} disabled={!fileName} loading={uploading}>
+              {uploading ? 'Uploading...' : 'Upload Photo'}
+            </Button>
           </>
         }
       >
         <div className="space-y-5">
           {/* Drag-and-drop zone */}
           <div
+            onClick={handleFilePick}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => { e.preventDefault(); setDragOver(false); }}
-            className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors ${
+            onDrop={handleDrop}
+            className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors cursor-pointer ${
               dragOver
                 ? 'border-green-500 bg-green-500/10'
-                : 'border-earth-600 bg-earth-800/30 hover:border-earth-500'
+                : fileName
+                  ? 'border-green-600 bg-green-500/5'
+                  : 'border-earth-600 bg-earth-800/30 hover:border-earth-500'
             }`}
           >
-            <ImagePlus className="w-10 h-10 text-earth-400" />
-            <div className="text-center">
-              <p className="text-sm font-medium text-earth-200">Drag & drop a photo here</p>
-              <p className="text-xs text-earth-500 mt-1">or click to browse (demo mode)</p>
-            </div>
+            {fileName ? (
+              <>
+                <Camera className="w-10 h-10 text-green-400" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-green-300">{fileName}</p>
+                  <p className="text-xs text-earth-500 mt-1">Click to change file</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <ImagePlus className="w-10 h-10 text-earth-400" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-earth-200">Drag & drop a photo here</p>
+                  <p className="text-xs text-earth-500 mt-1">or click to browse (demo mode)</p>
+                </div>
+              </>
+            )}
           </div>
 
           <Select

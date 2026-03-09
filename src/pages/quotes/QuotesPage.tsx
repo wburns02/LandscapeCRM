@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, FileText, Send, CheckCircle, DollarSign, Trash2 } from 'lucide-react';
+import { Plus, FileText, Send, DollarSign, Trash2, Pencil } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
@@ -11,7 +11,7 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import EmptyState from '../../components/ui/EmptyState';
 import { format } from 'date-fns';
-import type { QuoteStatus } from '../../types';
+import type { Quote, QuoteStatus } from '../../types';
 
 const statusTabs: { key: '' | QuoteStatus; label: string }[] = [
   { key: '', label: 'All' },
@@ -28,13 +28,19 @@ interface LineItemForm {
 }
 
 export default function QuotesPage() {
-  const { quotes, customers, addQuote, addInvoice, updateQuote } = useData();
+  const { quotes, customers, addQuote, addInvoice, updateQuote, deleteQuote } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | QuoteStatus>('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({ title: '', customer_id: '', valid_days: '30', notes: '' });
   const [lineItems, setLineItems] = useState<LineItemForm[]>([{ description: '', quantity: '1', unit_price: '' }]);
+
+  // Edit modal state
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+  const [editFormData, setEditFormData] = useState({ title: '', customer_id: '', valid_days: '30', notes: '', status: 'draft' as QuoteStatus });
+  const [editLineItems, setEditLineItems] = useState<LineItemForm[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const filtered = useMemo(() => {
     return quotes.filter(q => {
@@ -45,12 +51,51 @@ export default function QuotesPage() {
     });
   }, [quotes, search, statusFilter]);
 
+  // Create modal line item helpers
   const addLineItem = () => setLineItems(prev => [...prev, { description: '', quantity: '1', unit_price: '' }]);
   const removeLineItem = (idx: number) => setLineItems(prev => prev.filter((_, i) => i !== idx));
   const updateLineItem = (idx: number, field: keyof LineItemForm, value: string) =>
     setLineItems(prev => prev.map((item, i) => i === idx ? { ...item, [field]: value } : item));
 
   const lineTotal = lineItems.reduce((sum, li) => sum + (parseFloat(li.quantity) || 0) * (parseFloat(li.unit_price) || 0), 0);
+
+  // Edit modal line item helpers
+  const addEditLineItem = () => setEditLineItems(prev => [...prev, { description: '', quantity: '1', unit_price: '' }]);
+  const removeEditLineItem = (idx: number) => setEditLineItems(prev => prev.filter((_, i) => i !== idx));
+  const updateEditLineItem = (idx: number, field: keyof LineItemForm, value: string) =>
+    setEditLineItems(prev => prev.map((item, i) => i === idx ? { ...item, [field]: value } : item));
+
+  const editLineTotal = editLineItems.reduce((sum, li) => sum + (parseFloat(li.quantity) || 0) * (parseFloat(li.unit_price) || 0), 0);
+
+  // Open edit modal pre-filled with quote data
+  const openEditModal = (quote: Quote) => {
+    setEditingQuote(quote);
+    const daysUntilValid = quote.valid_until
+      ? Math.max(0, Math.ceil((new Date(quote.valid_until).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+      : 30;
+    setEditFormData({
+      title: quote.title,
+      customer_id: quote.customer_id,
+      valid_days: String(daysUntilValid),
+      notes: quote.notes || '',
+      status: quote.status,
+    });
+    setEditLineItems(
+      quote.line_items.map(li => ({
+        description: li.description,
+        quantity: String(li.quantity),
+        unit_price: String(li.unit_price),
+      }))
+    );
+    setShowDeleteConfirm(false);
+  };
+
+  const closeEditModal = () => {
+    setEditingQuote(null);
+    setEditFormData({ title: '', customer_id: '', valid_days: '30', notes: '', status: 'draft' });
+    setEditLineItems([]);
+    setShowDeleteConfirm(false);
+  };
 
   const handleSubmit = async () => {
     if (!formData.title || !formData.customer_id) {
@@ -92,6 +137,60 @@ export default function QuotesPage() {
       setLineItems([{ description: '', quantity: '1', unit_price: '' }]);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create quote');
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingQuote) return;
+    if (!editFormData.title || !editFormData.customer_id) {
+      toast.error('Title and customer are required');
+      return;
+    }
+    try {
+      const items = editLineItems
+        .filter(li => li.description && li.unit_price)
+        .map((li, idx) => ({
+          id: editingQuote.line_items[idx]?.id || String(Date.now() + idx),
+          description: li.description,
+          quantity: parseFloat(li.quantity) || 1,
+          unit_price: parseFloat(li.unit_price) || 0,
+          total: (parseFloat(li.quantity) || 1) * (parseFloat(li.unit_price) || 0),
+        }));
+      const subtotal = items.reduce((s, li) => s + li.total, 0);
+      const taxRate = 8.25;
+      const taxAmount = subtotal * (taxRate / 100);
+      const validUntil = new Date();
+      validUntil.setDate(validUntil.getDate() + (parseInt(editFormData.valid_days) || 30));
+
+      const customer = customers.find(c => c.id === editFormData.customer_id);
+      await updateQuote(editingQuote.id, {
+        title: editFormData.title,
+        customer_id: editFormData.customer_id,
+        customer: customer ? { id: customer.id, name: customer.name } : undefined,
+        line_items: items,
+        subtotal,
+        tax_rate: taxRate,
+        tax_amount: taxAmount,
+        total: subtotal + taxAmount,
+        valid_until: validUntil.toISOString().split('T')[0],
+        notes: editFormData.notes || undefined,
+        status: editFormData.status,
+      });
+      toast.success(`Quote "${editFormData.title}" updated`);
+      closeEditModal();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update quote');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!editingQuote) return;
+    try {
+      await deleteQuote(editingQuote.id);
+      toast.success(`Quote "${editingQuote.title}" deleted`);
+      closeEditModal();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete quote');
     }
   };
 
@@ -153,6 +252,9 @@ export default function QuotesPage() {
                     <p className="text-xs text-earth-400">inc. tax</p>
                   </div>
                   <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" icon={<Pencil className="w-3.5 h-3.5" />} onClick={() => openEditModal(quote)}>
+                      Edit
+                    </Button>
                     {quote.status === 'draft' && (
                       <Button variant="ghost" size="sm" icon={<Send className="w-3.5 h-3.5" />} onClick={async () => {
                         try {
@@ -206,6 +308,7 @@ export default function QuotesPage() {
         </div>
       )}
 
+      {/* Create Quote Modal */}
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -260,6 +363,91 @@ export default function QuotesPage() {
           </div>
 
           <Input label="Notes" value={formData.notes} onChange={e => setFormData(f => ({ ...f, notes: e.target.value }))} placeholder="Additional notes..." />
+        </div>
+      </Modal>
+
+      {/* Edit Quote Modal */}
+      <Modal
+        isOpen={!!editingQuote}
+        onClose={closeEditModal}
+        title="Edit Quote"
+        size="xl"
+        footer={
+          <>
+            {!showDeleteConfirm ? (
+              <>
+                <Button variant="danger" onClick={() => setShowDeleteConfirm(true)} icon={<Trash2 className="w-4 h-4" />}>Delete</Button>
+                <div className="flex-1" />
+                <Button variant="secondary" onClick={closeEditModal}>Cancel</Button>
+                <Button onClick={handleEditSubmit}>Save Changes</Button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-red-400 mr-auto">Are you sure? This cannot be undone.</p>
+                <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+                <Button variant="danger" onClick={handleDelete}>Confirm Delete</Button>
+              </>
+            )}
+          </>
+        }
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input label="Quote Title" required value={editFormData.title} onChange={e => setEditFormData(f => ({ ...f, title: e.target.value }))} placeholder="Front Yard Redesign" />
+            <Select label="Customer" options={[{ value: '', label: 'Select customer' }, ...customers.map(c => ({ value: c.id, label: c.name }))]} value={editFormData.customer_id} onChange={e => setEditFormData(f => ({ ...f, customer_id: e.target.value }))} />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Select
+              label="Status"
+              options={[
+                { value: 'draft', label: 'Draft' },
+                { value: 'sent', label: 'Sent' },
+                { value: 'accepted', label: 'Accepted' },
+                { value: 'declined', label: 'Declined' },
+              ]}
+              value={editFormData.status}
+              onChange={e => setEditFormData(f => ({ ...f, status: e.target.value as QuoteStatus }))}
+            />
+            <Input label="Valid Days (from today)" type="number" value={editFormData.valid_days} onChange={e => setEditFormData(f => ({ ...f, valid_days: e.target.value }))} />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-earth-200">Line Items</h4>
+              <Button variant="ghost" size="sm" icon={<Plus className="w-3.5 h-3.5" />} onClick={addEditLineItem}>Add Item</Button>
+            </div>
+            <div className="space-y-2">
+              {editLineItems.map((li, idx) => (
+                <div key={idx} className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <Input placeholder="Description" value={li.description} onChange={e => updateEditLineItem(idx, 'description', e.target.value)} />
+                  </div>
+                  <div className="w-20">
+                    <Input placeholder="Qty" type="number" value={li.quantity} onChange={e => updateEditLineItem(idx, 'quantity', e.target.value)} />
+                  </div>
+                  <div className="w-28">
+                    <Input placeholder="Price" type="number" value={li.unit_price} onChange={e => updateEditLineItem(idx, 'unit_price', e.target.value)} />
+                  </div>
+                  <div className="w-24 text-right text-sm text-earth-200 pb-2.5">
+                    ${((parseFloat(li.quantity) || 0) * (parseFloat(li.unit_price) || 0)).toFixed(2)}
+                  </div>
+                  {editLineItems.length > 1 && (
+                    <button onClick={() => removeEditLineItem(idx)} className="p-2.5 text-red-400 hover:text-red-300 cursor-pointer">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 pt-3 border-t border-earth-800 text-right">
+              <p className="text-sm text-earth-300">Subtotal: <span className="font-semibold text-earth-100">${editLineTotal.toFixed(2)}</span></p>
+              <p className="text-sm text-earth-300">Tax (8.25%): <span className="font-semibold text-earth-100">${(editLineTotal * 0.0825).toFixed(2)}</span></p>
+              <p className="text-lg font-bold text-earth-50 mt-1">Total: ${(editLineTotal * 1.0825).toFixed(2)}</p>
+            </div>
+          </div>
+
+          <Input label="Notes" value={editFormData.notes} onChange={e => setEditFormData(f => ({ ...f, notes: e.target.value }))} placeholder="Additional notes..." />
         </div>
       </Modal>
     </div>

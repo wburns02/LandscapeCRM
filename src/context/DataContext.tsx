@@ -116,6 +116,7 @@ interface DataContextType {
   recordPayment: (invoiceId: string, amount: number) => Promise<void>;
   deleteCustomer: (customerId: string) => Promise<void>;
   deleteJob: (jobId: string) => Promise<void>;
+  deleteQuote: (quoteId: string) => Promise<void>;
   recurringServices: RecurringService[];
   addRecurringService: (data: Partial<RecurringService>) => Promise<RecurringService>;
   updateRecurringService: (id: string, data: Partial<RecurringService>) => Promise<void>;
@@ -921,7 +922,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const updateQuote = useCallback(async (quoteId: string, data: Partial<Quote>) => {
     try {
       await api.patch(`/quotes/${quoteId}`, {
+        title: data.title,
+        customer_id: data.customer_id,
         status: data.status,
+        line_items: data.line_items,
+        subtotal: data.subtotal,
+        tax_rate: data.tax_rate,
+        tax_amount: data.tax_amount,
+        total: data.total,
+        valid_until: data.valid_until,
         sent_at: data.sent_at,
         accepted_at: data.accepted_at,
         notes: data.notes,
@@ -932,6 +941,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setQuotes(prev => prev.map(q =>
       q.id === quoteId ? { ...q, ...data, updated_at: new Date().toISOString() } : q
     ));
+  }, []);
+
+  const deleteQuote = useCallback(async (quoteId: string) => {
+    try { await api.delete(`/quotes/${quoteId}`); } catch { /* demo fallback */ }
+    setQuotes(prev => prev.filter(q => q.id !== quoteId));
   }, []);
 
   const deleteCustomer = useCallback(async (customerId: string) => {
@@ -1157,7 +1171,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         updateJobStatus, updateCustomer, updateJob,
         addCustomer, addJob, addQuote, addInvoice, addContract,
         addCrew, addEquipment, addLead, updateLead, addInventoryItem,
-        updateInvoice, updateQuote,
+        updateInvoice, updateQuote, deleteQuote,
         updateInventoryQuantity, recordPayment, deleteCustomer, deleteJob,
         recurringServices, addRecurringService, updateRecurringService, generateServiceVisit,
         expenses, addExpense, updateExpense, deleteExpense,
