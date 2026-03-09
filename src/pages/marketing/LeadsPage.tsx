@@ -268,7 +268,18 @@ export default function LeadsPage() {
                     <span className="text-sm font-semibold text-green-400">${lead.estimated_value.toLocaleString()}</span>
                   )}
                   {lead.status !== 'won' && lead.status !== 'lost' && (
-                    <Button variant="ghost" size="sm" icon={<ArrowRight className="w-3.5 h-3.5" />} onClick={() => toast.success('Lead advanced')}>
+                    <Button variant="ghost" size="sm" icon={<ArrowRight className="w-3.5 h-3.5" />} onClick={async () => {
+                      const pipeline: LeadStatus[] = ['new', 'contacted', 'qualified', 'quoted', 'won'];
+                      const idx = pipeline.indexOf(lead.status as LeadStatus);
+                      if (idx < 0 || idx >= pipeline.length - 1) return;
+                      const nextStatus = pipeline[idx + 1];
+                      try {
+                        await updateLead(lead.id, { status: nextStatus });
+                        toast.success(`"${lead.name}" advanced to ${nextStatus}`);
+                      } catch {
+                        toast.error('Failed to advance lead');
+                      }
+                    }}>
                       Advance
                     </Button>
                   )}

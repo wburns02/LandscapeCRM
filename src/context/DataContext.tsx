@@ -124,6 +124,7 @@ interface DataContextType {
   addExpense: (data: Partial<Expense>) => Promise<Expense>;
   updateExpense: (id: string, data: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  updateSettings: (data: Partial<SystemSettings>) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -1097,6 +1098,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setExpenses(prev => prev.filter(e => e.id !== id));
   }, []);
 
+  const updateSettings = useCallback((data: Partial<SystemSettings>) => {
+    setSettings(prev => prev ? { ...prev, ...data } : null);
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchAll();
@@ -1120,6 +1125,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         updateInventoryQuantity, recordPayment, deleteCustomer, deleteJob,
         recurringServices, addRecurringService, updateRecurringService, generateServiceVisit,
         expenses, addExpense, updateExpense, deleteExpense,
+        updateSettings,
       }}
     >
       {children}

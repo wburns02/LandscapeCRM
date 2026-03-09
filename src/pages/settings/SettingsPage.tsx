@@ -15,7 +15,7 @@ function isDemoMode(): boolean {
 type SettingsTab = 'company' | 'billing' | 'users' | 'appearance';
 
 export default function SettingsPage() {
-  const { settings } = useData();
+  const { settings, updateSettings } = useData();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<SettingsTab>('company');
   const [companyForm, setCompanyForm] = useState({
@@ -40,6 +40,13 @@ export default function SettingsPage() {
 
   const handleSaveCompany = async () => {
     if (isDemoMode()) {
+      updateSettings({
+        company_name: companyForm.company_name,
+        company_email: companyForm.company_email,
+        company_phone: companyForm.company_phone,
+        company_address: companyForm.company_address,
+        timezone: companyForm.timezone,
+      });
       toast.success('Company settings saved');
       return;
     }
@@ -59,6 +66,11 @@ export default function SettingsPage() {
 
   const handleSaveBilling = async () => {
     if (isDemoMode()) {
+      updateSettings({
+        tax_rate: parseFloat(billingForm.tax_rate) || 8.25,
+        default_payment_terms: parseInt(billingForm.default_payment_terms) || 30,
+        currency: billingForm.currency,
+      });
       toast.success('Billing settings saved');
       return;
     }

@@ -2,7 +2,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Phone, Mail, MapPin, Calendar, DollarSign, Briefcase, FileText, Receipt, Trash2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
-import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -19,7 +18,7 @@ type Tab = 'overview' | 'jobs' | 'quotes' | 'invoices' | 'notes';
 export default function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { customers, jobs, quotes, invoices, updateCustomer, refreshCustomers } = useData();
+  const { customers, jobs, quotes, invoices, updateCustomer, deleteCustomer } = useData();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [showEditModal, setShowEditModal] = useState(false);
@@ -83,9 +82,8 @@ export default function CustomerDetailPage() {
     if (!customer) return;
     setIsDeleting(true);
     try {
-      await api.delete(`/customers/${customer.id}`);
+      await deleteCustomer(customer.id);
       toast.success(`Customer "${customer.name}" deleted`);
-      await refreshCustomers();
       navigate('/customers');
     } catch {
       toast.error('Failed to delete customer');
