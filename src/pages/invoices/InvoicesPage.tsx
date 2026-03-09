@@ -32,7 +32,7 @@ interface LineItem {
 }
 
 export default function InvoicesPage() {
-  const { invoices, customers, refreshInvoices } = useData();
+  const { invoices, customers, addInvoice, recordPayment, refreshInvoices } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | InvoiceStatus>('');
@@ -101,24 +101,29 @@ export default function InvoicesPage() {
 
     setIsSaving(true);
     try {
-      await api.post('/invoices', {
+      const customer = customers.find(c => c.id === formData.customer_id);
+      const filteredItems = lineItems.filter(li => li.description).map((li, idx) => ({
+        id: String(idx + 1),
+        description: li.description,
+        quantity: li.quantity,
+        unit_price: li.unit_price,
+        total: li.total,
+      }));
+      await addInvoice({
         customer_id: formData.customer_id,
+        customer: customer,
         status: 'draft',
-        line_items: lineItems.filter(li => li.description).map((li, idx) => ({
-          id: String(idx + 1),
-          description: li.description,
-          quantity: li.quantity,
-          unit_price: li.unit_price,
-          total: li.total,
-        })),
+        line_items: filteredItems,
+        subtotal,
         tax_rate: taxRate,
+        tax_amount: taxAmount,
+        total,
         due_date: formData.due_date || undefined,
         notes: formData.notes || undefined,
       });
       toast.success('Invoice created');
       setShowCreateModal(false);
       resetForm();
-      await refreshInvoices();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create invoice');
     } finally {
@@ -197,13 +202,8 @@ export default function InvoicesPage() {
                     {(inv.status === 'sent' || inv.status === 'overdue' || inv.status === 'partial') && (
                       <Button variant="ghost" size="sm" icon={<DollarSign className="w-3.5 h-3.5" />} onClick={async () => {
                         try {
-                          await api.patch(`/invoices/${inv.id}`, {
-                            status: 'paid',
-                            paid_amount: inv.total,
-                            paid_at: new Date().toISOString(),
-                          });
+                          await recordPayment(inv.id, inv.total);
                           toast.success('Payment recorded');
-                          await refreshInvoices();
                         } catch { toast.error('Failed to record payment'); }
                       }}>Record Payment</Button>
                     )}

@@ -25,8 +25,10 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   });
 
   if (res.status === 401) {
-    localStorage.removeItem('gs_token');
-    window.location.href = '/login';
+    if (localStorage.getItem('gs_token') !== 'demo_token') {
+      localStorage.removeItem('gs_token');
+      window.location.href = '/login';
+    }
     throw new ApiError('Unauthorized', 401);
   }
 

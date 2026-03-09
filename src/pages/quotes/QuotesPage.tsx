@@ -29,7 +29,7 @@ interface LineItemForm {
 }
 
 export default function QuotesPage() {
-  const { quotes, customers, refreshQuotes } = useData();
+  const { quotes, customers, addQuote, refreshQuotes } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | QuoteStatus>('');
@@ -73,9 +73,11 @@ export default function QuotesPage() {
       const validUntil = new Date();
       validUntil.setDate(validUntil.getDate() + (parseInt(formData.valid_days) || 30));
 
-      await api.post('/quotes', {
+      const customer = customers.find(c => c.id === formData.customer_id);
+      await addQuote({
         title: formData.title,
         customer_id: formData.customer_id,
+        customer: customer ? { id: customer.id, name: customer.name } : undefined,
         line_items: items,
         subtotal,
         tax_rate: taxRate,
@@ -89,7 +91,6 @@ export default function QuotesPage() {
       setShowCreateModal(false);
       setFormData({ title: '', customer_id: '', valid_days: '30', notes: '' });
       setLineItems([{ description: '', quantity: '1', unit_price: '' }]);
-      await refreshQuotes();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create quote');
     }

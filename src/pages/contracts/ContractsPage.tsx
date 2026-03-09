@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { Plus, FileSignature, DollarSign, Calendar, RefreshCw } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
-import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -14,7 +13,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import { format } from 'date-fns';
 
 export default function ContractsPage() {
-  const { contracts, customers, refreshContracts } = useData();
+  const { contracts, customers, addContract } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'expired'>('all');
@@ -41,20 +40,21 @@ export default function ContractsPage() {
       return;
     }
     try {
-      await api.post('/contracts', {
+      const customer = customers.find(c => c.id === formData.customer_id);
+      const monthlyValue = parseFloat(formData.monthly_value) || 0;
+      await addContract({
         title: formData.title,
         customer_id: formData.customer_id,
-        visit_frequency: formData.frequency,
+        customer,
+        frequency: formData.frequency as 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annual' | 'seasonal',
         start_date: formData.start_date || new Date().toISOString().split('T')[0],
         end_date: formData.end_date || undefined,
-        price_per_visit: parseFloat(formData.monthly_value) || 0,
-        total_value: (parseFloat(formData.monthly_value) || 0) * 12,
-        status: 'active',
+        monthly_value: monthlyValue,
+        total_value: monthlyValue * 12,
       });
       toast.success(`Contract "${formData.title}" created`);
       setShowAddModal(false);
       setFormData({ title: '', customer_id: '', frequency: 'monthly', start_date: '', end_date: '', monthly_value: '' });
-      await refreshContracts();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create contract');
     }

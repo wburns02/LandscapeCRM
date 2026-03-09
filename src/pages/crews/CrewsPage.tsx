@@ -14,7 +14,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import type { Crew } from '../../types';
 
 export default function CrewsPage() {
-  const { crews, jobs, refreshCrews } = useData();
+  const { crews, jobs, addCrew, refreshCrews } = useData();
   const toast = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', color: '#22c55e', vehicle: '' });
@@ -35,15 +35,15 @@ export default function CrewsPage() {
       return;
     }
     try {
-      await api.post('/crews', {
+      await addCrew({
         name: formData.name,
         color: formData.color,
         is_active: true,
+        vehicle: formData.vehicle || undefined,
       });
       toast.success(`Crew "${formData.name}" created`);
       setShowAddModal(false);
       setFormData({ name: '', color: '#22c55e', vehicle: '' });
-      await refreshCrews();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create crew');
     }

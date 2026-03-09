@@ -27,7 +27,7 @@ const categories: { key: '' | InventoryCategory; label: string }[] = [
 ];
 
 export default function InventoryPage() {
-  const { inventory, refreshInventory } = useData();
+  const { inventory, addInventoryItem, updateInventoryQuantity, refreshInventory } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<'' | InventoryCategory>('');
@@ -62,20 +62,19 @@ export default function InventoryPage() {
       return;
     }
     try {
-      await api.post('/inventory', {
+      await addInventoryItem({
         name: formData.name,
         category: formData.category,
         unit: formData.unit,
-        quantity_on_hand: parseFloat(formData.quantity) || 0,
+        quantity: parseFloat(formData.quantity) || 0,
         unit_cost: parseFloat(formData.unit_cost) || 0,
-        unit_price: parseFloat(formData.retail_price) || 0,
-        reorder_level: parseFloat(formData.min_stock) || 0,
-        supplier_name: formData.supplier || undefined,
+        retail_price: parseFloat(formData.retail_price) || 0,
+        min_stock: parseFloat(formData.min_stock) || 0,
+        supplier: formData.supplier || undefined,
       });
       toast.success(`"${formData.name}" added to inventory`);
       setShowAddModal(false);
       setFormData({ name: '', category: 'plants', quantity: '', unit: '', unit_cost: '', retail_price: '', min_stock: '', supplier: '' });
-      await refreshInventory();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to add item');
     }
@@ -84,11 +83,8 @@ export default function InventoryPage() {
   const handleQuantityAdjust = async (e: React.MouseEvent, itemId: string, itemName: string, delta: number) => {
     e.stopPropagation();
     try {
-      const item = inventory.find(i => i.id === itemId);
-      const newQty = (item?.quantity ?? 0) + delta;
-      await api.patch(`/inventory/${itemId}`, { quantity_on_hand: Math.max(0, newQty) });
+      await updateInventoryQuantity(itemId, delta);
       toast.success(`${itemName} quantity adjusted by ${delta > 0 ? '+' : ''}${delta}`);
-      await refreshInventory();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to adjust quantity');
     }

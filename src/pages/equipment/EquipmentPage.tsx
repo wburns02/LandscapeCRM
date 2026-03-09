@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { Plus, Wrench, AlertTriangle, Clock, DollarSign } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
-import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -14,7 +13,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import { format } from 'date-fns';
 
 export default function EquipmentPage() {
-  const { equipment, crews, refreshEquipment } = useData();
+  const { equipment, crews, addEquipment } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -41,9 +40,9 @@ export default function EquipmentPage() {
       return;
     }
     try {
-      await api.post('/equipment', {
+      await addEquipment({
         name: formData.name,
-        equipment_type: formData.type,
+        type: formData.type,
         make: formData.make || undefined,
         model: formData.model || undefined,
         serial_number: formData.serial_number || undefined,
@@ -54,7 +53,6 @@ export default function EquipmentPage() {
       toast.success(`Equipment "${formData.name}" added`);
       setShowAddModal(false);
       setFormData({ name: '', type: '', make: '', model: '', serial_number: '', purchase_price: '' });
-      await refreshEquipment();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to add equipment');
     }

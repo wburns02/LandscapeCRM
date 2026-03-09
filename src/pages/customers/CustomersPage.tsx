@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Users, Grid, List, Phone, Mail, MapPin } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
-import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Badge from '../../components/ui/Badge';
@@ -16,7 +15,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import type { Customer } from '../../types';
 
 export default function CustomersPage() {
-  const { customers, refreshCustomers } = useData();
+  const { customers, addCustomer, deleteCustomer } = useData();
   const navigate = useNavigate();
   const toast = useToast();
   const [search, setSearch] = useState('');
@@ -44,26 +43,21 @@ export default function CustomersPage() {
       return;
     }
     try {
-      const nameParts = formData.name.trim().split(/\s+/);
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-      await api.post('/customers', {
-        first_name: firstName,
-        last_name: lastName,
-        email: formData.email || undefined,
+      await addCustomer({
+        name: formData.name,
+        email: formData.email,
         phone: formData.phone,
-        address: formData.address || undefined,
-        city: formData.city || undefined,
-        state: formData.state || undefined,
-        zip_code: formData.zip || undefined,
-        customer_type: formData.type,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zip,
+        type: formData.type,
       });
       toast.success(`Customer "${formData.name}" created`);
       setShowAddModal(false);
       setFormData({ name: '', email: '', phone: '', address: '', city: '', state: '', zip: '', type: 'residential' });
-      await refreshCustomers();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to create customer');
+      toast.error('Failed to create customer');
     }
   };
 

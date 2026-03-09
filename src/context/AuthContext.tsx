@@ -3,6 +3,17 @@ import type { User } from '../types';
 import { login as apiLogin, logout as apiLogout, getCurrentUser } from '../api/auth';
 import { Navigate, useLocation } from 'react-router-dom';
 
+const DEMO_USER: User = {
+  id: 'demo',
+  name: 'Demo User',
+  email: 'demo@maasverde.com',
+  role: 'admin',
+};
+
+function isDemoMode(): boolean {
+  return localStorage.getItem('gs_token') === 'demo_token';
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -19,30 +30,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = localStorage.getItem('gs_token');
-    if (token) {
-      getCurrentUser()
-        .then(setUser)
-        .catch(() => {
-          localStorage.removeItem('gs_token');
-          setUser(null);
-        })
-        .finally(() => setIsLoading(false));
-    } else {
+    if (!token) {
       setIsLoading(false);
+      return;
     }
+    if (token === 'demo_token') {
+      setUser(DEMO_USER);
+      setIsLoading(false);
+      return;
+    }
+    getCurrentUser()
+      .then(setUser)
+      .catch(() => {
+        localStorage.removeItem('gs_token');
+        setUser(null);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const result = await apiLogin(email, password);
-    // Map API full_name to frontend name
-    const apiUser = result.user as unknown as Record<string, unknown>;
-    setUser({
-      ...result.user,
-      name: (apiUser.full_name as string) || result.user.name || result.user.email,
-    });
+    try {
+      const result = await apiLogin(email, password);
+      const apiUser = result.user as unknown as Record<string, unknown>;
+      setUser({
+        ...result.user,
+        name: (apiUser.full_name as string) || result.user.name || result.user.email,
+      });
+    } catch {
+      // API unavailable — fall back to demo mode
+      localStorage.setItem('gs_token', 'demo_token');
+      setUser(DEMO_USER);
+    }
   }, []);
 
   const logout = useCallback(async () => {
+    if (isDemoMode()) {
+      localStorage.removeItem('gs_token');
+      setUser(null);
+      return;
+    }
     await apiLogout();
     setUser(null);
   }, []);

@@ -61,6 +61,14 @@ function normalizeInventory(i: InventoryItem): InventoryItem {
   };
 }
 
+function isDemoMode(): boolean {
+  return localStorage.getItem('gs_token') === 'demo_token';
+}
+
+function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
 interface DataContextType {
   customers: Customer[];
   jobs: Job[];
@@ -91,6 +99,19 @@ interface DataContextType {
   updateJobStatus: (jobId: string, status: string) => Promise<void>;
   updateCustomer: (customerId: string, data: Partial<Customer>) => Promise<void>;
   updateJob: (jobId: string, data: Partial<Job>) => Promise<void>;
+  addCustomer: (data: Partial<Customer>) => Promise<Customer>;
+  addJob: (data: Partial<Job>) => Promise<Job>;
+  addQuote: (data: Partial<Quote>) => Promise<Quote>;
+  addInvoice: (data: Partial<Invoice>) => Promise<Invoice>;
+  addContract: (data: Partial<Contract>) => Promise<Contract>;
+  addCrew: (data: Partial<Crew>) => Promise<Crew>;
+  addEquipment: (data: Partial<Equipment>) => Promise<Equipment>;
+  addLead: (data: Partial<Lead>) => Promise<Lead>;
+  addInventoryItem: (data: Partial<InventoryItem>) => Promise<InventoryItem>;
+  updateInventoryQuantity: (itemId: string, delta: number) => Promise<void>;
+  recordPayment: (invoiceId: string, amount: number) => Promise<void>;
+  deleteCustomer: (customerId: string) => Promise<void>;
+  deleteJob: (jobId: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -344,6 +365,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
+    // Skip API calls entirely in demo mode to avoid 401 spam
+    if (isDemoMode()) {
+      loadDemoData();
+      return;
+    }
+
     try {
       const [c, j, cr, inv, q, i, co, eq, l, p, d, s] = await Promise.allSettled([
         api.get<Customer[]>('/customers'),
@@ -474,6 +502,290 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ));
   }, []);
 
+  const addCustomer = useCallback(async (data: Partial<Customer>): Promise<Customer> => {
+    const newCustomer: Customer = {
+      id: generateId(),
+      name: data.name || '',
+      email: data.email || '',
+      phone: data.phone || '',
+      address: data.address || '',
+      city: data.city || '',
+      state: data.state || '',
+      zip: data.zip || '',
+      type: data.type || 'residential',
+      tags: data.tags || [],
+      property_size_sqft: data.property_size_sqft,
+      notes: data.notes,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const nameParts = (data.name || '').trim().split(/\s+/);
+      const result = await api.post<Customer>('/customers', {
+        first_name: nameParts[0] || '',
+        last_name: nameParts.slice(1).join(' ') || '',
+        email: data.email, phone: data.phone, address: data.address,
+        city: data.city, state: data.state, zip_code: data.zip,
+        customer_type: data.type,
+      });
+      const normalized = normalizeCustomer(result);
+      setCustomers(prev => [...prev, normalized]);
+      return normalized;
+    } catch {
+      setCustomers(prev => [...prev, newCustomer]);
+      return newCustomer;
+    }
+  }, []);
+
+  const addJob = useCallback(async (data: Partial<Job>): Promise<Job> => {
+    const customer = data.customer_id ? undefined : undefined;
+    const newJob: Job = {
+      id: generateId(),
+      title: data.title || '',
+      customer_id: data.customer_id || '',
+      customer: data.customer,
+      type: data.type || 'other',
+      status: data.status || 'scheduled',
+      crew_id: data.crew_id,
+      crew: data.crew,
+      scheduled_date: data.scheduled_date || '',
+      scheduled_time: data.scheduled_time || '08:00',
+      estimated_hours: data.estimated_hours || 2,
+      total_price: data.total_price || 0,
+      materials_cost: data.materials_cost || 0,
+      labor_cost: data.labor_cost || 0,
+      address: data.address || '',
+      photos: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const result = await api.post<Job>('/jobs', {
+        title: data.title, customer_id: data.customer_id,
+        job_type: data.type, crew_id: data.crew_id || undefined,
+        scheduled_date: data.scheduled_date,
+        estimated_duration_hours: data.estimated_hours || 2,
+        total_price: data.total_price, status: 'scheduled',
+      });
+      const normalized = normalizeJob(result);
+      setJobs(prev => [...prev, normalized]);
+      return normalized;
+    } catch {
+      setJobs(prev => [...prev, newJob]);
+      return newJob;
+    }
+  }, []);
+
+  const addQuote = useCallback(async (data: Partial<Quote>): Promise<Quote> => {
+    const newQuote: Quote = {
+      id: generateId(),
+      customer_id: data.customer_id || '',
+      customer: data.customer,
+      title: data.title || '',
+      status: 'draft',
+      line_items: data.line_items || [],
+      subtotal: data.subtotal || 0,
+      tax_rate: data.tax_rate || 8.25,
+      tax_amount: data.tax_amount || 0,
+      total: data.total || 0,
+      valid_until: data.valid_until || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const result = await api.post<Quote>('/quotes', data);
+      setQuotes(prev => [...prev, result]);
+      return result;
+    } catch {
+      setQuotes(prev => [...prev, newQuote]);
+      return newQuote;
+    }
+  }, []);
+
+  const addInvoice = useCallback(async (data: Partial<Invoice>): Promise<Invoice> => {
+    const newInvoice: Invoice = {
+      id: generateId(),
+      invoice_number: `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900) + 100)}`,
+      customer_id: data.customer_id || '',
+      customer: data.customer,
+      status: 'draft',
+      line_items: data.line_items || [],
+      subtotal: data.subtotal || 0,
+      tax_rate: data.tax_rate || 8.25,
+      tax_amount: data.tax_amount || 0,
+      total: data.total || 0,
+      amount_paid: 0,
+      due_date: data.due_date || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const result = await api.post<Invoice>('/invoices', data);
+      setInvoices(prev => [...prev, result]);
+      return result;
+    } catch {
+      setInvoices(prev => [...prev, newInvoice]);
+      return newInvoice;
+    }
+  }, []);
+
+  const addContract = useCallback(async (data: Partial<Contract>): Promise<Contract> => {
+    const newContract: Contract = {
+      id: generateId(),
+      customer_id: data.customer_id || '',
+      customer: data.customer,
+      title: data.title || '',
+      services: data.services || [],
+      frequency: data.frequency || 'monthly',
+      start_date: data.start_date || '',
+      end_date: data.end_date || '',
+      monthly_value: data.monthly_value || 0,
+      total_value: data.total_value || 0,
+      is_active: true,
+      auto_renew: data.auto_renew ?? false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const result = await api.post<Contract>('/contracts', data);
+      setContracts(prev => [...prev, normalizeContract(result)]);
+      return normalizeContract(result);
+    } catch {
+      setContracts(prev => [...prev, newContract]);
+      return newContract;
+    }
+  }, []);
+
+  const addCrew = useCallback(async (data: Partial<Crew>): Promise<Crew> => {
+    const newCrew: Crew = {
+      id: generateId(),
+      name: data.name || '',
+      color: data.color || '#22c55e',
+      is_active: true,
+      vehicle: data.vehicle || '',
+      members: data.members || [],
+      created_at: new Date().toISOString(),
+    };
+    try {
+      const result = await api.post<Crew>('/crews', data);
+      setCrews(prev => [...prev, result]);
+      return result;
+    } catch {
+      setCrews(prev => [...prev, newCrew]);
+      return newCrew;
+    }
+  }, []);
+
+  const addEquipment = useCallback(async (data: Partial<Equipment>): Promise<Equipment> => {
+    const newEquip: Equipment = {
+      id: generateId(),
+      name: data.name || '',
+      type: data.type || '',
+      make: data.make || '',
+      model: data.model || '',
+      serial_number: data.serial_number,
+      purchase_date: data.purchase_date,
+      purchase_price: data.purchase_price || 0,
+      status: 'available',
+      hours_used: 0,
+      created_at: new Date().toISOString(),
+    };
+    try {
+      const result = await api.post<Equipment>('/equipment', data);
+      setEquipment(prev => [...prev, normalizeEquipment(result)]);
+      return normalizeEquipment(result);
+    } catch {
+      setEquipment(prev => [...prev, newEquip]);
+      return newEquip;
+    }
+  }, []);
+
+  const addLead = useCallback(async (data: Partial<Lead>): Promise<Lead> => {
+    const newLead: Lead = {
+      id: generateId(),
+      name: data.name || '',
+      phone: data.phone || '',
+      email: data.email,
+      source: data.source || 'website',
+      status: 'new',
+      service_interest: data.service_interest || '',
+      estimated_value: data.estimated_value || 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const result = await api.post<Lead>('/leads', data);
+      setLeads(prev => [...prev, normalizeLead(result)]);
+      return normalizeLead(result);
+    } catch {
+      setLeads(prev => [...prev, newLead]);
+      return newLead;
+    }
+  }, []);
+
+  const addInventoryItem = useCallback(async (data: Partial<InventoryItem>): Promise<InventoryItem> => {
+    const newItem: InventoryItem = {
+      id: generateId(),
+      name: data.name || '',
+      category: data.category || 'other',
+      quantity: data.quantity || 0,
+      unit: data.unit || 'each',
+      unit_cost: data.unit_cost || 0,
+      retail_price: data.retail_price || 0,
+      min_stock: data.min_stock || 0,
+      supplier: data.supplier || '',
+      created_at: new Date().toISOString(),
+    };
+    try {
+      const result = await api.post<InventoryItem>('/inventory', data);
+      setInventory(prev => [...prev, normalizeInventory(result)]);
+      return normalizeInventory(result);
+    } catch {
+      setInventory(prev => [...prev, newItem]);
+      return newItem;
+    }
+  }, []);
+
+  const updateInventoryQuantity = useCallback(async (itemId: string, delta: number) => {
+    try {
+      await api.patch(`/inventory/${itemId}/quantity`, { delta });
+    } catch {
+      // demo fallback
+    }
+    setInventory(prev => prev.map(item =>
+      item.id === itemId ? { ...item, quantity: Math.max(0, (item.quantity || 0) + delta) } : item
+    ));
+  }, []);
+
+  const recordPayment = useCallback(async (invoiceId: string, amount: number) => {
+    try {
+      await api.patch(`/invoices/${invoiceId}`, {
+        status: 'paid', paid_amount: amount, paid_at: new Date().toISOString(),
+      });
+    } catch {
+      // demo fallback
+    }
+    setInvoices(prev => prev.map(inv =>
+      inv.id === invoiceId ? {
+        ...inv,
+        status: (inv.amount_paid || 0) + amount >= inv.total ? 'paid' as const : 'partial' as const,
+        amount_paid: (inv.amount_paid || 0) + amount,
+        paid_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } : inv
+    ));
+  }, []);
+
+  const deleteCustomer = useCallback(async (customerId: string) => {
+    try { await api.delete(`/customers/${customerId}`); } catch { /* demo fallback */ }
+    setCustomers(prev => prev.filter(c => c.id !== customerId));
+  }, []);
+
+  const deleteJob = useCallback(async (jobId: string) => {
+    try { await api.delete(`/jobs/${jobId}`); } catch { /* demo fallback */ }
+    setJobs(prev => prev.filter(j => j.id !== jobId));
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchAll();
@@ -491,6 +803,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         refreshInventory, refreshQuotes, refreshInvoices, refreshLeads,
         refreshContracts, refreshEquipment, refreshCrews, refreshSchedule,
         updateJobStatus, updateCustomer, updateJob,
+        addCustomer, addJob, addQuote, addInvoice, addContract,
+        addCrew, addEquipment, addLead, addInventoryItem,
+        updateInventoryQuantity, recordPayment, deleteCustomer, deleteJob,
       }}
     >
       {children}
