@@ -97,14 +97,14 @@ export default function SchedulePage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-hidden">
       {/* Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <button onClick={() => navigateDate('prev')} className="p-2 hover:bg-earth-800 rounded-lg text-earth-300 cursor-pointer">
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <h2 className="text-lg font-semibold font-display text-earth-100 min-w-[200px] text-center">
+          <h2 className="text-lg font-semibold font-display text-earth-100 text-center truncate">
             {viewMode === 'week'
               ? `${format(weekDays[0], 'MMM d')} - ${format(weekDays[6], 'MMM d, yyyy')}`
               : format(currentDate, 'MMMM yyyy')
@@ -136,7 +136,8 @@ export default function SchedulePage() {
         <div className="lg:col-span-3">
           {viewMode === 'week' ? (
             <Card padding={false}>
-              <div className="grid grid-cols-7 border-b border-earth-800">
+              <div className="overflow-x-auto">
+              <div className="grid grid-cols-7 border-b border-earth-800 min-w-[500px]">
                 {weekDays.map(day => (
                   <div key={day.toISOString()} className={`p-3 text-center border-r border-earth-800/50 last:border-r-0 ${
                     isSameDay(day, new Date()) ? 'bg-green-600/10' : ''
@@ -148,7 +149,7 @@ export default function SchedulePage() {
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 min-h-[400px]">
+              <div className="grid grid-cols-7 min-h-[400px] min-w-[500px]">
                 {weekDays.map(day => {
                   const dayJobs = getJobsForDay(day);
                   return (
@@ -170,15 +171,17 @@ export default function SchedulePage() {
                   );
                 })}
               </div>
+              </div>
             </Card>
           ) : (
             <Card padding={false}>
-              <div className="grid grid-cols-7 border-b border-earth-800">
+              <div className="overflow-x-auto">
+              <div className="grid grid-cols-7 border-b border-earth-800 min-w-[500px]">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
                   <div key={d} className="p-2 text-center text-xs text-earth-400 uppercase font-medium">{d}</div>
                 ))}
               </div>
-              <div className="grid grid-cols-7">
+              <div className="grid grid-cols-7 min-w-[500px]">
                 {Array.from({ length: monthPaddingBefore }).map((_, i) => (
                   <div key={`pad-${i}`} className="p-2 min-h-[100px] border-r border-b border-earth-800/30 bg-earth-950/50" />
                 ))}
@@ -210,6 +213,7 @@ export default function SchedulePage() {
                     </div>
                   );
                 })}
+              </div>
               </div>
             </Card>
           )}

@@ -107,8 +107,34 @@ export default function CampaignsPage() {
   const handleWizardNext = () => setWizardStep(s => Math.min(4, s + 1));
   const handleWizardBack = () => setWizardStep(s => Math.max(1, s - 1));
 
+  const isDemoMode = () => localStorage.getItem('gs_token') === 'demo_token';
+
   const handleWizardSubmit = async () => {
     try {
+      if (isDemoMode()) {
+        const recipientCount = Math.floor(Math.random() * 400) + 50;
+        const demoCampaign: EmailCampaign = {
+          id: `demo-${Date.now()}`,
+          name: wizardData.name,
+          template_id: wizardData.template_id || '',
+          status: wizardData.schedule === 'now' ? 'sending' : 'scheduled',
+          recipient_count: recipientCount,
+          sent_count: 0,
+          open_count: 0,
+          click_count: 0,
+          bounce_count: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          send_at: wizardData.schedule === 'later' ? wizardData.send_at : undefined,
+        };
+        setCampaigns(prev => [demoCampaign, ...prev]);
+        toast.success(`Campaign "${wizardData.name}" created with ${recipientCount} recipients`);
+        setShowWizard(false);
+        setWizardStep(1);
+        setWizardData({ name: '', template_id: '', city: '', work_type: '', min_score: '', max_score: '', min_property_value: '', max_property_value: '', recipient_limit: '', schedule: 'now', send_at: '' });
+        return;
+      }
+
       // Create campaign
       const campaign = await api.post<EmailCampaign>('/email/campaigns', {
         name: wizardData.name,
@@ -190,7 +216,7 @@ export default function CampaignsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -212,13 +238,13 @@ export default function CampaignsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-earth-900 p-1 rounded-lg border border-earth-800 w-fit">
+      <div className="flex gap-1 bg-earth-900 p-1 rounded-lg border border-earth-800 w-fit max-w-full overflow-x-auto">
         {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={clsx(
-              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer',
+              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer whitespace-nowrap',
               tab === t.id
                 ? 'bg-green-600/20 text-green-400'
                 : 'text-earth-400 hover:text-earth-200'

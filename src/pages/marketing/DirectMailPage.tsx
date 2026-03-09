@@ -151,8 +151,35 @@ export default function DirectMailPage() {
   const handleWizardNext = () => setWizardStep(s => Math.min(4, s + 1));
   const handleWizardBack = () => setWizardStep(s => Math.max(1, s - 1));
 
+  const isDemoMode = () => localStorage.getItem('gs_token') === 'demo_token';
+
   const handleWizardSubmit = async () => {
     try {
+      if (isDemoMode()) {
+        const recipientCount = Math.floor(Math.random() * 300) + 25;
+        const costPer = wizardData.cost_per_piece ? parseFloat(wizardData.cost_per_piece) : (wizardData.mail_type === 'postcard' ? 0.78 : 1.25);
+        const demoCampaign: DirectMailCampaign = {
+          id: `demo-${Date.now()}`,
+          name: wizardData.name,
+          mail_type: wizardData.mail_type,
+          template_id: wizardData.template_id || '',
+          status: 'draft',
+          recipient_count: recipientCount,
+          cost_per_piece: costPer,
+          estimated_cost: Math.round(recipientCount * costPer * 100) / 100,
+          print_vendor: wizardData.print_vendor || undefined,
+          notes: wizardData.notes || undefined,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setCampaigns(prev => [demoCampaign, ...prev]);
+        toast.success(`Campaign "${wizardData.name}" created with ${recipientCount} recipients`);
+        setShowWizard(false);
+        setWizardStep(1);
+        setWizardData({ name: '', mail_type: 'postcard', template_id: '', cost_per_piece: '', print_vendor: '', notes: '', city: '', work_type: '', min_score: '', max_score: '', min_property_value: '', max_property_value: '', recipient_limit: '' });
+        return;
+      }
+
       const campaign = await api.post<DirectMailCampaign>('/direct-mail/campaigns', {
         name: wizardData.name,
         mail_type: wizardData.mail_type,

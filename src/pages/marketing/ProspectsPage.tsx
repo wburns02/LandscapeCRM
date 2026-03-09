@@ -31,6 +31,47 @@ const WORK_TYPE_LABELS: Record<string, string> = {
   residential: 'Residential',
 };
 
+const DEMO_PROSPECTS: Prospect[] = [
+  { id: 'p1', first_name: 'James', last_name: 'Whitfield', full_name: 'James Whitfield', phone: '(512) 555-0142', phone_2: '', email: 'jwhitfield@gmail.com', address: '4821 Oak Ridge Trail', city: 'Austin', state: 'TX', zip_code: '78731', property_value: 485000, sqft: 2800, year_built: 2018, work_type: 'new_construction', lead_score: 87, status: 'new', source: 'permit_data', email_status: 'valid', notes: '', created_at: '2026-02-15T10:00:00Z', updated_at: '2026-02-15T10:00:00Z' },
+  { id: 'p2', first_name: 'Rachel', last_name: 'Dominguez', full_name: 'Rachel Dominguez', phone: '(512) 555-0198', phone_2: '', email: 'rachel.d@yahoo.com', address: '1209 Barton Springs Rd', city: 'Austin', state: 'TX', zip_code: '78704', property_value: 620000, sqft: 3200, year_built: 2020, work_type: 'remodel', lead_score: 74, status: 'new', source: 'permit_data', email_status: 'valid', notes: '', created_at: '2026-02-14T08:30:00Z', updated_at: '2026-02-14T08:30:00Z' },
+  { id: 'p3', first_name: 'Marcus', last_name: 'Thompson', full_name: 'Marcus Thompson', phone: '(512) 555-0267', phone_2: '(512) 555-0268', email: 'mthompson@outlook.com', address: '7632 Bee Cave Rd', city: 'Austin', state: 'TX', zip_code: '78746', property_value: 875000, sqft: 4100, year_built: 2021, work_type: 'new_construction', lead_score: 92, status: 'new', source: 'permit_data', email_status: 'valid', notes: 'Large lot with pool potential', created_at: '2026-02-13T14:00:00Z', updated_at: '2026-02-13T14:00:00Z' },
+  { id: 'p4', first_name: 'Sarah', last_name: 'Nguyen', full_name: 'Sarah Nguyen', phone: '(512) 555-0334', phone_2: '', email: 'sarah.n@gmail.com', address: '2345 South Lamar Blvd', city: 'Austin', state: 'TX', zip_code: '78704', property_value: 395000, sqft: 1900, year_built: 2015, work_type: 'remodel', lead_score: 65, status: 'contacted', source: 'permit_data', email_status: 'valid', notes: '', created_at: '2026-02-12T09:15:00Z', updated_at: '2026-02-20T11:00:00Z' },
+  { id: 'p5', first_name: 'David', last_name: 'Hernandez', full_name: 'David Hernandez', phone: '(512) 555-0412', phone_2: '', email: 'dhernandez@live.com', address: '890 W William Cannon Dr', city: 'Austin', state: 'TX', zip_code: '78745', property_value: 340000, sqft: 2100, year_built: 2012, work_type: 'addition', lead_score: 58, status: 'new', source: 'permit_data', email_status: 'valid', notes: '', created_at: '2026-02-11T16:45:00Z', updated_at: '2026-02-11T16:45:00Z' },
+  { id: 'p6', first_name: 'Jennifer', last_name: 'Walsh', full_name: 'Jennifer Walsh', phone: '(512) 555-0489', phone_2: '', email: 'jwalsh@gmail.com', address: '5612 Anderson Mill Rd', city: 'Cedar Park', state: 'TX', zip_code: '78613', property_value: 520000, sqft: 3000, year_built: 2019, work_type: 'new_construction', lead_score: 81, status: 'new', source: 'permit_data', email_status: 'valid', notes: '', created_at: '2026-02-10T12:00:00Z', updated_at: '2026-02-10T12:00:00Z' },
+  { id: 'p7', first_name: 'Robert', last_name: 'Kim', full_name: 'Robert Kim', phone: '(512) 555-0556', phone_2: '', email: 'rkim@protonmail.com', address: '1478 Parmer Ln', city: 'Round Rock', state: 'TX', zip_code: '78681', property_value: 445000, sqft: 2600, year_built: 2017, work_type: 'remodel', lead_score: 71, status: 'qualified', source: 'permit_data', email_status: 'valid', notes: 'Interested in xeriscaping', created_at: '2026-02-09T10:30:00Z', updated_at: '2026-02-22T15:00:00Z' },
+  { id: 'p8', first_name: 'Amanda', last_name: 'Foster', full_name: 'Amanda Foster', phone: '(512) 555-0623', phone_2: '', email: 'afoster@icloud.com', address: '3201 Slaughter Ln', city: 'Austin', state: 'TX', zip_code: '78748', property_value: 380000, sqft: 2200, year_built: 2014, work_type: 'repair', lead_score: 43, status: 'new', source: 'permit_data', email_status: 'valid', notes: '', created_at: '2026-02-08T08:00:00Z', updated_at: '2026-02-08T08:00:00Z' },
+  { id: 'p9', first_name: 'Christopher', last_name: 'Patel', full_name: 'Christopher Patel', phone: '(512) 555-0701', phone_2: '', email: 'cpatel@gmail.com', address: '6789 Great Hills Trail', city: 'Austin', state: 'TX', zip_code: '78759', property_value: 715000, sqft: 3800, year_built: 2022, work_type: 'new_construction', lead_score: 95, status: 'new', source: 'permit_data', email_status: 'valid', notes: 'New build, no landscaping yet', created_at: '2026-02-07T13:20:00Z', updated_at: '2026-02-07T13:20:00Z' },
+  { id: 'p10', first_name: 'Lisa', last_name: 'Martinez', full_name: 'Lisa Martinez', phone: '(512) 555-0778', phone_2: '', email: 'lmartinez@yahoo.com', address: '2890 Research Blvd', city: 'Austin', state: 'TX', zip_code: '78759', property_value: 560000, sqft: 3100, year_built: 2016, work_type: 'remodel', lead_score: 68, status: 'new', source: 'permit_data', email_status: 'bounced', notes: '', created_at: '2026-02-06T11:00:00Z', updated_at: '2026-02-06T11:00:00Z' },
+  { id: 'p11', first_name: 'Brian', last_name: "O'Connor", full_name: "Brian O'Connor", phone: '(512) 555-0845', phone_2: '', email: 'boconnor@gmail.com', address: '4523 Oltorf St', city: 'Austin', state: 'TX', zip_code: '78741', property_value: 295000, sqft: 1600, year_built: 2008, work_type: 'repair', lead_score: 35, status: 'do_not_contact', source: 'permit_data', email_status: 'valid', notes: 'Requested removal from list', created_at: '2026-02-05T09:45:00Z', updated_at: '2026-02-18T14:00:00Z' },
+  { id: 'p12', first_name: 'Emily', last_name: 'Chang', full_name: 'Emily Chang', phone: '(512) 555-0912', phone_2: '', email: 'echang@outlook.com', address: '8901 MoPac Expy', city: 'Austin', state: 'TX', zip_code: '78749', property_value: 680000, sqft: 3500, year_built: 2020, work_type: 'new_construction', lead_score: 88, status: 'new', source: 'permit_data', email_status: 'valid', notes: '', created_at: '2026-02-04T10:00:00Z', updated_at: '2026-02-04T10:00:00Z' },
+];
+
+const DEMO_STATS: ProspectStats = {
+  total: 12,
+  avg_lead_score: 71,
+  avg_property_value: 526250,
+  by_city: [
+    { city: 'Austin', count: 9 },
+    { city: 'Cedar Park', count: 1 },
+    { city: 'Round Rock', count: 1 },
+    { city: 'Pflugerville', count: 1 },
+  ],
+  by_work_type: [
+    { work_type: 'new_construction', count: 5 },
+    { work_type: 'remodel', count: 4 },
+    { work_type: 'repair', count: 2 },
+    { work_type: 'addition', count: 1 },
+  ],
+  by_status: [
+    { status: 'new', count: 8 },
+    { status: 'contacted', count: 1 },
+    { status: 'qualified', count: 1 },
+    { status: 'do_not_contact', count: 1 },
+  ],
+};
+
+const isDemoMode = () => localStorage.getItem('gs_token') === 'demo_token';
+
 export default function ProspectsPage() {
   const toast = useToast();
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -91,7 +132,37 @@ export default function ProspectsPage() {
       setProspects(data.items);
       setTotal(data.total);
     } catch {
-      // Will show empty state
+      // Demo mode fallback
+      if (isDemoMode()) {
+        let filtered = [...DEMO_PROSPECTS];
+        if (debouncedSearch) {
+          const q = debouncedSearch.toLowerCase();
+          filtered = filtered.filter(p =>
+            p.full_name.toLowerCase().includes(q) ||
+            p.address.toLowerCase().includes(q) ||
+            p.phone.includes(q) ||
+            (p.email && p.email.toLowerCase().includes(q))
+          );
+        }
+        if (filterCity) filtered = filtered.filter(p => p.city === filterCity);
+        if (filterWorkType) filtered = filtered.filter(p => p.work_type === filterWorkType);
+        if (filterStatus) filtered = filtered.filter(p => p.status === filterStatus);
+        if (filterMinScore) filtered = filtered.filter(p => (p.lead_score ?? 0) >= parseInt(filterMinScore));
+        if (filterMaxScore) filtered = filtered.filter(p => (p.lead_score ?? 0) <= parseInt(filterMaxScore));
+        if (filterMinValue) filtered = filtered.filter(p => (p.property_value ?? 0) >= parseFloat(filterMinValue));
+        if (filterMaxValue) filtered = filtered.filter(p => (p.property_value ?? 0) <= parseFloat(filterMaxValue));
+
+        // Sort
+        filtered.sort((a, b) => {
+          const aVal = sortBy === 'lead_score' ? (a.lead_score ?? 0) : sortBy === 'property_value' ? (a.property_value ?? 0) : a.full_name;
+          const bVal = sortBy === 'lead_score' ? (b.lead_score ?? 0) : sortBy === 'property_value' ? (b.property_value ?? 0) : b.full_name;
+          if (typeof aVal === 'string') return sortDir === 'asc' ? aVal.localeCompare(bVal as string) : (bVal as string).localeCompare(aVal);
+          return sortDir === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+        });
+
+        setTotal(filtered.length);
+        setProspects(filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE));
+      }
     } finally {
       setLoading(false);
     }
@@ -101,7 +172,13 @@ export default function ProspectsPage() {
 
   // Load stats and filter options once
   useEffect(() => {
-    api.get<ProspectStats>('/prospects/stats').then(setStats).catch(() => {});
+    api.get<ProspectStats>('/prospects/stats').then(setStats).catch(() => {
+      if (isDemoMode()) {
+        setStats(DEMO_STATS);
+        setCities(DEMO_STATS.by_city);
+        setWorkTypes(DEMO_STATS.by_work_type.map(w => ({ work_type: w.work_type, count: w.count })));
+      }
+    });
     api.get<{ city: string; count: number }[]>('/prospects/cities').then(setCities).catch(() => {});
     api.get<{ work_type: string; count: number }[]>('/prospects/work-types').then(setWorkTypes).catch(() => {});
   }, []);
