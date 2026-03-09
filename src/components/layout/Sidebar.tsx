@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Briefcase, Calendar, Package, FileText,
   Receipt, FileSignature, UsersRound, Wrench, Target, UserSearch, Mail,
   RefreshCw, Send, Camera, BarChart3, Settings, Menu, X, ChevronLeft, ChevronDown,
-  Timer, ClipboardList,
+  Timer, ClipboardList, Globe,
   type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -67,6 +67,7 @@ const navSections: NavSection[] = [
   {
     title: '',
     items: [
+      { to: '/portal', icon: Globe, label: 'Client Portal' },
       { to: '/reports', icon: BarChart3, label: 'Reports' },
       { to: '/settings', icon: Settings, label: 'Settings' },
     ],

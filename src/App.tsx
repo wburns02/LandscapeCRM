@@ -27,6 +27,7 @@ import ReportsPage from './pages/reports/ReportsPage';
 import RecurringServicesPage from './pages/services/RecurringServicesPage';
 import TimeTrackingPage from './pages/time-tracking/TimeTrackingPage';
 import ProposalBuilderPage from './pages/proposals/ProposalBuilderPage';
+import CustomerPortalPage from './pages/portal/CustomerPortalPage';
 import SettingsPage from './pages/settings/SettingsPage';
 
 const pageTitles: Record<string, string> = {
@@ -48,6 +49,7 @@ const pageTitles: Record<string, string> = {
   '/direct-mail': 'Direct Mail',
   '/proposals': 'Proposals',
   '/photos': 'Photos',
+  '/portal': 'Customer Portal',
   '/reports': 'Reports',
   '/settings': 'Settings',
 };
@@ -86,6 +88,7 @@ function AppLayout() {
             <Route path="/direct-mail" element={<DirectMailPage />} />
             <Route path="/proposals" element={<ProposalBuilderPage />} />
             <Route path="/photos" element={<PhotosPage />} />
+            <Route path="/portal" element={<CustomerPortalPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
