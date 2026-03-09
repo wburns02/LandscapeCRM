@@ -2,11 +2,12 @@ import { useState, useMemo } from 'react';
 import {
   RefreshCw, Plus, Search, Calendar, DollarSign, Clock, Users,
   Play, Pause, CheckCircle, ChevronRight, AlertTriangle, MapPin,
-  Repeat, X,
+  Repeat, X, Pencil, Save,
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import type { RecurringService, ServiceFrequency } from '../../types';
 import Button from '../../components/ui/Button';
+import Modal from '../../components/ui/Modal';
 import StatCard from '../../components/ui/StatCard';
 import Input from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
@@ -94,6 +95,9 @@ export default function RecurringServicesPage() {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState<FormData>(emptyForm);
   const [selectedService, setSelectedService] = useState<RecurringService | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<FormData>(emptyForm);
 
   const filtered = useMemo(() => {
     let list = recurringServices || [];
@@ -177,6 +181,68 @@ export default function RecurringServicesPage() {
         ? prev.services_included.filter(s => s !== svc)
         : [...prev.services_included, svc],
     }));
+  };
+
+  const toggleEditServiceIncluded = (svc: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      services_included: prev.services_included.includes(svc)
+        ? prev.services_included.filter(s => s !== svc)
+        : [...prev.services_included, svc],
+    }));
+  };
+
+  const openEditModal = (service: RecurringService) => {
+    setEditingServiceId(service.id);
+    setEditFormData({
+      title: service.title,
+      customer_id: service.customer_id,
+      service_type: service.service_type,
+      frequency: service.frequency,
+      preferred_day: service.preferred_day
+        ? service.preferred_day.charAt(0).toUpperCase() + service.preferred_day.slice(1)
+        : 'Monday',
+      preferred_time: service.preferred_time || '08:00',
+      crew_id: service.crew_id || '',
+      price_per_visit: String(service.price_per_visit),
+      estimated_hours: String(service.estimated_hours),
+      start_date: service.start_date || '',
+      end_date: service.end_date || '',
+      services_included: [...service.services_included],
+      notes: service.notes || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingServiceId) return;
+    if (!editFormData.title) {
+      toast.error('Title is required');
+      return;
+    }
+    const crew = editFormData.crew_id ? crews.find(c => c.id === editFormData.crew_id) : undefined;
+
+    await updateRecurringService(editingServiceId, {
+      title: editFormData.title,
+      service_type: editFormData.service_type,
+      frequency: editFormData.frequency,
+      preferred_day: editFormData.preferred_day.toLowerCase(),
+      preferred_time: editFormData.preferred_time,
+      crew_id: editFormData.crew_id || undefined,
+      crew,
+      price_per_visit: parseFloat(editFormData.price_per_visit) || 0,
+      estimated_hours: parseFloat(editFormData.estimated_hours) || 2,
+      services_included: editFormData.services_included,
+      notes: editFormData.notes || undefined,
+    });
+
+    toast.success(`Service "${editFormData.title}" updated`);
+    setShowEditModal(false);
+    setEditingServiceId(null);
+    // If the detail sidebar is open for this service, close it so it refreshes cleanly
+    if (selectedService?.id === editingServiceId) {
+      setSelectedService(null);
+    }
   };
 
   return (
@@ -349,6 +415,14 @@ export default function RecurringServicesPage() {
                       {service.status === 'active' ? 'Pause' : 'Resume'}
                     </button>
                     <button
+                      onClick={() => openEditModal(service)}
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-earth-400 hover:text-earth-200 hover:bg-earth-700/50 rounded-md transition-colors cursor-pointer"
+                      title="Edit service"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      Edit
+                    </button>
+                    <button
                       onClick={() => setSelectedService(service)}
                       className="flex items-center px-2 py-1 text-xs text-earth-400 hover:text-earth-200 transition-colors cursor-pointer"
                     >
@@ -445,20 +519,30 @@ export default function RecurringServicesPage() {
                   </div>
                 )}
 
-                <div className="pt-4 flex gap-2">
-                  {selectedService.status === 'active' && (
-                    <Button className="flex-1" icon={<CheckCircle className="w-4 h-4" />} onClick={() => { handleGenerateVisit(selectedService); setSelectedService(null); }}>
-                      Schedule Next Visit
-                    </Button>
-                  )}
+                <div className="pt-4 space-y-2">
                   <Button
+                    className="w-full"
                     variant="outline"
-                    className="flex-1"
-                    onClick={() => { handleToggleStatus(selectedService); setSelectedService(null); }}
-                    icon={selectedService.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    icon={<Pencil className="w-4 h-4" />}
+                    onClick={() => { openEditModal(selectedService); setSelectedService(null); }}
                   >
-                    {selectedService.status === 'active' ? 'Pause Service' : 'Resume Service'}
+                    Edit Service
                   </Button>
+                  <div className="flex gap-2">
+                    {selectedService.status === 'active' && (
+                      <Button className="flex-1" icon={<CheckCircle className="w-4 h-4" />} onClick={() => { handleGenerateVisit(selectedService); setSelectedService(null); }}>
+                        Schedule Next Visit
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => { handleToggleStatus(selectedService); setSelectedService(null); }}
+                      icon={selectedService.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    >
+                      {selectedService.status === 'active' ? 'Pause Service' : 'Resume Service'}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -633,6 +717,144 @@ export default function RecurringServicesPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => { setShowEditModal(false); setEditingServiceId(null); }}
+        title="Edit Recurring Service"
+        size="lg"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => { setShowEditModal(false); setEditingServiceId(null); }}>Cancel</Button>
+            <Button icon={<Save className="w-4 h-4" />} onClick={handleEditSubmit}>Save Changes</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-earth-300 mb-1">Service Title</label>
+              <input
+                type="text"
+                placeholder="Weekly Lawn Maintenance"
+                value={editFormData.title}
+                onChange={e => setEditFormData(p => ({ ...p, title: e.target.value }))}
+                className="w-full px-3 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-200 placeholder:text-earth-500 focus:outline-none focus:border-green-600"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-earth-300 mb-1">Service Type</label>
+              <select
+                value={editFormData.service_type}
+                onChange={e => setEditFormData(p => ({ ...p, service_type: e.target.value }))}
+                className="w-full px-3 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-200 focus:outline-none focus:border-green-600"
+              >
+                {SERVICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-earth-300 mb-1">Frequency</label>
+              <select
+                value={editFormData.frequency}
+                onChange={e => setEditFormData(p => ({ ...p, frequency: e.target.value as ServiceFrequency }))}
+                className="w-full px-3 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-200 focus:outline-none focus:border-green-600"
+              >
+                {Object.entries(FREQUENCY_LABELS).map(([val, label]) => (
+                  <option key={val} value={val}>{label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-earth-300 mb-1">Preferred Day</label>
+              <select
+                value={editFormData.preferred_day}
+                onChange={e => setEditFormData(p => ({ ...p, preferred_day: e.target.value }))}
+                className="w-full px-3 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-200 focus:outline-none focus:border-green-600"
+              >
+                {DAY_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-earth-300 mb-1">Preferred Time</label>
+              <input
+                type="time"
+                value={editFormData.preferred_time}
+                onChange={e => setEditFormData(p => ({ ...p, preferred_time: e.target.value }))}
+                className="w-full px-3 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-200 focus:outline-none focus:border-green-600"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-earth-300 mb-1">Assign Crew</label>
+              <select
+                value={editFormData.crew_id}
+                onChange={e => setEditFormData(p => ({ ...p, crew_id: e.target.value }))}
+                className="w-full px-3 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-200 focus:outline-none focus:border-green-600"
+              >
+                <option value="">Unassigned</option>
+                {crews.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-earth-300 mb-1">Price Per Visit</label>
+              <input
+                type="number"
+                placeholder="175.00"
+                value={editFormData.price_per_visit}
+                onChange={e => setEditFormData(p => ({ ...p, price_per_visit: e.target.value }))}
+                className="w-full px-3 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-200 placeholder:text-earth-500 focus:outline-none focus:border-green-600"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-earth-300 mb-1">Est. Hours</label>
+              <input
+                type="number"
+                value={editFormData.estimated_hours}
+                onChange={e => setEditFormData(p => ({ ...p, estimated_hours: e.target.value }))}
+                className="w-full px-3 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-200 focus:outline-none focus:border-green-600"
+              />
+            </div>
+          </div>
+
+          {/* Services checklist */}
+          <div>
+            <label className="block text-sm font-medium text-earth-300 mb-2">Services Included</label>
+            <div className="grid grid-cols-3 gap-2">
+              {SERVICE_TYPES.map(svc => (
+                <button
+                  key={svc}
+                  type="button"
+                  onClick={() => toggleEditServiceIncluded(svc)}
+                  className={`text-xs px-3 py-1.5 rounded-md border transition-colors cursor-pointer text-left ${
+                    editFormData.services_included.includes(svc)
+                      ? 'bg-green-600/20 border-green-600/50 text-green-400'
+                      : 'bg-earth-800 border-earth-700 text-earth-400 hover:border-earth-600'
+                  }`}
+                >
+                  {svc}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-earth-300 mb-1">Notes</label>
+            <textarea
+              placeholder="Special instructions, gate codes, etc."
+              value={editFormData.notes}
+              onChange={e => setEditFormData(p => ({ ...p, notes: e.target.value }))}
+              rows={2}
+              className="w-full px-3 py-2 bg-earth-800 border border-earth-700 rounded-lg text-sm text-earth-200 placeholder:text-earth-500 focus:outline-none focus:border-green-600 resize-none"
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

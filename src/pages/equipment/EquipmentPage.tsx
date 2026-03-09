@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Plus, Wrench, AlertTriangle, Clock, DollarSign } from 'lucide-react';
+import { Plus, Wrench, AlertTriangle, Clock, DollarSign, Trash2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
+import type { Equipment } from '../../types';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -13,12 +14,90 @@ import Select from '../../components/ui/Select';
 import EmptyState from '../../components/ui/EmptyState';
 import { format } from 'date-fns';
 
+const emptyForm = { name: '', type: '', make: '', model: '', serial_number: '', purchase_price: '', status: 'available' as Equipment['status'], hours_used: '', assigned_crew_id: '', notes: '' };
+
 export default function EquipmentPage() {
-  const { equipment, crews, addEquipment } = useData();
+  const { equipment, crews, addEquipment, updateEquipment, deleteEquipment } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', type: '', make: '', model: '', serial_number: '', purchase_price: '' });
+
+  // Edit modal state
+  const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
+  const [editFormData, setEditFormData] = useState(emptyForm);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const openEditModal = (eq: Equipment) => {
+    setEditingEquipment(eq);
+    setEditFormData({
+      name: eq.name,
+      type: eq.type ?? eq.equipment_type ?? '',
+      make: eq.make ?? '',
+      model: eq.model ?? '',
+      serial_number: eq.serial_number ?? '',
+      purchase_price: eq.purchase_price?.toString() ?? '',
+      status: eq.status,
+      hours_used: eq.hours_used.toString(),
+      assigned_crew_id: eq.assigned_crew_id ?? '',
+      notes: eq.notes ?? '',
+    });
+    setShowDeleteConfirm(false);
+  };
+
+  const closeEditModal = () => {
+    setEditingEquipment(null);
+    setEditFormData(emptyForm);
+    setShowDeleteConfirm(false);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingEquipment) return;
+    if (!editFormData.name || !editFormData.type) {
+      toast.error('Name and type are required');
+      return;
+    }
+    try {
+      await updateEquipment(editingEquipment.id, {
+        name: editFormData.name,
+        type: editFormData.type,
+        make: editFormData.make || undefined,
+        model: editFormData.model || undefined,
+        serial_number: editFormData.serial_number || undefined,
+        purchase_price: parseFloat(editFormData.purchase_price) || undefined,
+        status: editFormData.status,
+        hours_used: parseFloat(editFormData.hours_used) || 0,
+        assigned_crew_id: editFormData.assigned_crew_id || undefined,
+        notes: editFormData.notes || undefined,
+      });
+      toast.success(`Equipment "${editFormData.name}" updated`);
+      closeEditModal();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update equipment');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!editingEquipment) return;
+    try {
+      await deleteEquipment(editingEquipment.id);
+      toast.success(`Equipment "${editingEquipment.name}" deleted`);
+      closeEditModal();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete equipment');
+    }
+  };
+
+  const statusOptions = [
+    { value: 'available', label: 'Available' },
+    { value: 'in_use', label: 'In Use' },
+    { value: 'maintenance', label: 'Maintenance' },
+  ];
+
+  const crewOptions = [
+    { value: '', label: 'Unassigned' },
+    ...crews.map(c => ({ value: c.id, label: c.name })),
+  ];
 
   const filtered = useMemo(() => {
     if (!search) return equipment;
@@ -103,7 +182,7 @@ export default function EquipmentPage() {
           {filtered.map(eq => {
             const assignedCrew = crews.find(c => c.id === eq.assigned_crew_id);
             return (
-              <Card key={eq.id} hover>
+              <Card key={eq.id} hover onClick={() => openEditModal(eq)}>
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
@@ -159,6 +238,44 @@ export default function EquipmentPage() {
           <Input label="Model" value={formData.model} onChange={e => setFormData(f => ({ ...f, model: e.target.value }))} placeholder="Z930M" />
           <Input label="Serial Number" value={formData.serial_number} onChange={e => setFormData(f => ({ ...f, serial_number: e.target.value }))} />
           <Input label="Purchase Price" type="number" value={formData.purchase_price} onChange={e => setFormData(f => ({ ...f, purchase_price: e.target.value }))} placeholder="0.00" />
+        </div>
+      </Modal>
+
+      {/* Edit Equipment Modal */}
+      <Modal
+        isOpen={!!editingEquipment}
+        onClose={closeEditModal}
+        title="Edit Equipment"
+        size="lg"
+        footer={
+          showDeleteConfirm ? (
+            <>
+              <p className="text-sm text-red-400 mr-auto">Are you sure? This cannot be undone.</p>
+              <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+              <Button variant="danger" onClick={handleDelete}>Confirm Delete</Button>
+            </>
+          ) : (
+            <>
+              <Button variant="danger" icon={<Trash2 className="w-4 h-4" />} onClick={() => setShowDeleteConfirm(true)} className="mr-auto">Delete</Button>
+              <Button variant="secondary" onClick={closeEditModal}>Cancel</Button>
+              <Button onClick={handleEditSubmit}>Save Changes</Button>
+            </>
+          )
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input label="Name" required value={editFormData.name} onChange={e => setEditFormData(f => ({ ...f, name: e.target.value }))} placeholder="John Deere Z930M" />
+          <Input label="Type" required value={editFormData.type} onChange={e => setEditFormData(f => ({ ...f, type: e.target.value }))} placeholder="Zero-Turn Mower" />
+          <Input label="Make" value={editFormData.make} onChange={e => setEditFormData(f => ({ ...f, make: e.target.value }))} placeholder="John Deere" />
+          <Input label="Model" value={editFormData.model} onChange={e => setEditFormData(f => ({ ...f, model: e.target.value }))} placeholder="Z930M" />
+          <Input label="Serial Number" value={editFormData.serial_number} onChange={e => setEditFormData(f => ({ ...f, serial_number: e.target.value }))} />
+          <Input label="Purchase Price" type="number" value={editFormData.purchase_price} onChange={e => setEditFormData(f => ({ ...f, purchase_price: e.target.value }))} placeholder="0.00" />
+          <Select label="Status" value={editFormData.status} onChange={e => setEditFormData(f => ({ ...f, status: e.target.value as Equipment['status'] }))} options={statusOptions} />
+          <Input label="Hours Used" type="number" value={editFormData.hours_used} onChange={e => setEditFormData(f => ({ ...f, hours_used: e.target.value }))} placeholder="0" />
+          <Select label="Assigned Crew" value={editFormData.assigned_crew_id} onChange={e => setEditFormData(f => ({ ...f, assigned_crew_id: e.target.value }))} options={crewOptions} />
+          <div className="sm:col-span-2">
+            <Input label="Notes" value={editFormData.notes} onChange={e => setEditFormData(f => ({ ...f, notes: e.target.value }))} placeholder="Additional notes..." />
+          </div>
         </div>
       </Modal>
     </div>

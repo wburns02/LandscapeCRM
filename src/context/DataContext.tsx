@@ -125,6 +125,12 @@ interface DataContextType {
   updateExpense: (id: string, data: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   updateSettings: (data: Partial<SystemSettings>) => void;
+  updateEquipment: (id: string, data: Partial<Equipment>) => Promise<void>;
+  deleteEquipment: (id: string) => Promise<void>;
+  updateInventoryItem: (id: string, data: Partial<InventoryItem>) => Promise<void>;
+  updateContract: (id: string, data: Partial<Contract>) => Promise<void>;
+  deleteContract: (id: string) => Promise<void>;
+  updateCrew: (id: string, data: Partial<Crew>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -1102,6 +1108,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setSettings(prev => prev ? { ...prev, ...data } : null);
   }, []);
 
+  const updateEquipment = useCallback(async (id: string, data: Partial<Equipment>) => {
+    try { await api.patch(`/equipment/${id}`, data); } catch { /* demo fallback */ }
+    setEquipment(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
+  }, []);
+
+  const deleteEquipment = useCallback(async (id: string) => {
+    try { await api.delete(`/equipment/${id}`); } catch { /* demo fallback */ }
+    setEquipment(prev => prev.filter(e => e.id !== id));
+  }, []);
+
+  const updateInventoryItem = useCallback(async (id: string, data: Partial<InventoryItem>) => {
+    try { await api.patch(`/inventory/${id}`, data); } catch { /* demo fallback */ }
+    setInventory(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
+  }, []);
+
+  const updateContract = useCallback(async (id: string, data: Partial<Contract>) => {
+    try { await api.patch(`/contracts/${id}`, data); } catch { /* demo fallback */ }
+    setContracts(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
+  }, []);
+
+  const deleteContract = useCallback(async (id: string) => {
+    try { await api.delete(`/contracts/${id}`); } catch { /* demo fallback */ }
+    setContracts(prev => prev.filter(c => c.id !== id));
+  }, []);
+
+  const updateCrew = useCallback(async (id: string, data: Partial<Crew>) => {
+    try { await api.patch(`/crews/${id}`, data); } catch { /* demo fallback */ }
+    setCrews(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchAll();
@@ -1125,7 +1161,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         updateInventoryQuantity, recordPayment, deleteCustomer, deleteJob,
         recurringServices, addRecurringService, updateRecurringService, generateServiceVisit,
         expenses, addExpense, updateExpense, deleteExpense,
-        updateSettings,
+        updateSettings, updateEquipment, deleteEquipment,
+        updateInventoryItem, updateContract, deleteContract, updateCrew,
       }}
     >
       {children}

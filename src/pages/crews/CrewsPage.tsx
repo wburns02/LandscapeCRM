@@ -11,10 +11,10 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import StatusBadge from '../../components/ui/StatusBadge';
 import EmptyState from '../../components/ui/EmptyState';
-import type { Crew } from '../../types';
+import type { Crew, CrewMember } from '../../types';
 
 export default function CrewsPage() {
-  const { crews, jobs, addCrew, refreshCrews } = useData();
+  const { crews, jobs, addCrew, updateCrew } = useData();
   const toast = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', color: '#22c55e', vehicle: '' });
@@ -70,7 +70,7 @@ export default function CrewsPage() {
     if (!selectedCrew) return;
     setIsSaving(true);
     try {
-      await api.patch(`/crews/${selectedCrew.id}`, {
+      await updateCrew(selectedCrew.id, {
         name: editForm.name,
         color: editForm.color,
         is_active: editForm.is_active,
@@ -78,7 +78,6 @@ export default function CrewsPage() {
       });
       toast.success(`Crew "${editForm.name}" updated`);
       setSelectedCrew(null);
-      await refreshCrews();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to update crew');
     } finally {
@@ -91,36 +90,40 @@ export default function CrewsPage() {
       toast.error('Name and phone are required');
       return;
     }
+    const newMember: CrewMember = {
+      id: `mem-${Date.now()}`,
+      name: memberForm.name,
+      phone: memberForm.phone,
+      role: memberForm.role as CrewMember['role'],
+      hourly_rate: parseFloat(memberForm.hourly_rate) || 0,
+      certifications: [],
+      is_active: true,
+      hire_date: new Date().toISOString(),
+    };
     try {
-      await api.post(`/crews/${selectedCrew.id}/members`, {
-        name: memberForm.name,
-        phone: memberForm.phone,
-        role: memberForm.role,
-        hourly_rate: parseFloat(memberForm.hourly_rate) || 0,
-        certifications: [],
-        is_active: true,
-      });
-      toast.success(`${memberForm.name} added to ${selectedCrew.name}`);
-      setShowAddMember(false);
-      setMemberForm({ name: '', phone: '', role: 'crew_member', hourly_rate: '' });
-      await refreshCrews();
-      // Update the selectedCrew reference
-      const updated = crews.find(c => c.id === selectedCrew.id);
-      if (updated) setSelectedCrew(updated);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to add member');
+      await api.post(`/crews/${selectedCrew.id}/members`, newMember);
+    } catch {
+      // demo fallback — update crew state locally
     }
+    const updatedMembers = [...(selectedCrew.members ?? []), newMember];
+    await updateCrew(selectedCrew.id, { members: updatedMembers });
+    setSelectedCrew({ ...selectedCrew, members: updatedMembers });
+    toast.success(`${memberForm.name} added to ${selectedCrew.name}`);
+    setShowAddMember(false);
+    setMemberForm({ name: '', phone: '', role: 'crew_member', hourly_rate: '' });
   };
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
     if (!selectedCrew) return;
     try {
       await api.delete(`/crews/${selectedCrew.id}/members/${memberId}`);
-      toast.success(`${memberName} removed from ${selectedCrew.name}`);
-      await refreshCrews();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to remove member');
+    } catch {
+      // demo fallback — update crew state locally
     }
+    const updatedMembers = (selectedCrew.members ?? []).filter(m => m.id !== memberId);
+    await updateCrew(selectedCrew.id, { members: updatedMembers });
+    setSelectedCrew({ ...selectedCrew, members: updatedMembers });
+    toast.success(`${memberName} removed from ${selectedCrew.name}`);
   };
 
   const roleOptions = [

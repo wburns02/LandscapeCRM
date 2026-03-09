@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { Plus, Package, AlertTriangle, Minus, Save, Edit2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../components/ui/Toast';
-import api from '../../api/client';
 import Button from '../../components/ui/Button';
 import SearchBar from '../../components/ui/SearchBar';
 import Card from '../../components/ui/Card';
@@ -27,7 +26,7 @@ const categories: { key: '' | InventoryCategory; label: string }[] = [
 ];
 
 export default function InventoryPage() {
-  const { inventory, addInventoryItem, updateInventoryQuantity, refreshInventory } = useData();
+  const { inventory, addInventoryItem, updateInventoryQuantity, updateInventoryItem } = useData();
   const toast = useToast();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<'' | InventoryCategory>('');
@@ -108,19 +107,18 @@ export default function InventoryPage() {
     if (!selectedItem) return;
     setIsSaving(true);
     try {
-      await api.patch(`/inventory/${selectedItem.id}`, {
+      await updateInventoryItem(selectedItem.id, {
         name: editForm.name,
         category: editForm.category,
         unit: editForm.unit,
-        quantity_on_hand: parseFloat(editForm.quantity) || 0,
+        quantity: parseFloat(editForm.quantity) || 0,
         unit_cost: parseFloat(editForm.unit_cost) || 0,
-        unit_price: parseFloat(editForm.retail_price) || 0,
-        reorder_level: parseFloat(editForm.min_stock) || 0,
-        supplier_name: editForm.supplier || undefined,
+        retail_price: parseFloat(editForm.retail_price) || 0,
+        min_stock: parseFloat(editForm.min_stock) || 0,
+        supplier: editForm.supplier || undefined,
       });
       toast.success(`"${editForm.name}" updated`);
       setSelectedItem(null);
-      await refreshInventory();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to update item');
     } finally {
