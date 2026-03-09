@@ -1,8 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
-  Clock, Play, Square, Plus, Users, DollarSign, TrendingUp,
-  Timer, CalendarDays, ChevronDown, AlertCircle, CheckCircle,
-  Briefcase, BarChart3, Pause,
+  Clock, Play, Square, Plus, DollarSign, TrendingUp,
+  Timer, CalendarDays, BarChart3,
 } from 'lucide-react';
 import { format, differenceInMinutes, differenceInSeconds, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -160,9 +159,9 @@ export default function TimeTrackingPage() {
       return sum + (e.hours * rate);
     }, 0);
   }, [thisWeek]);
-  const avgHoursPerDay = useMemo(() => {
-    const days = new Set(thisWeek.map(e => format(new Date(e.clock_in), 'yyyy-MM-dd')));
-    return days.size > 0 ? totalHoursThisWeek / days.size : 0;
+  const avgHoursPerMember = useMemo(() => {
+    const uniqueMembers = new Set(thisWeek.map(e => e.crew_member_id));
+    return uniqueMembers.size > 0 ? totalHoursThisWeek / uniqueMembers.size : 0;
   }, [thisWeek, totalHoursThisWeek]);
 
   // Job costing data
@@ -362,8 +361,8 @@ export default function TimeTrackingPage() {
           color="amber"
         />
         <StatCard
-          title="Avg Hours/Day"
-          value={`${avgHoursPerDay.toFixed(1)}h`}
+          title="Avg Hrs/Person"
+          value={`${avgHoursPerMember.toFixed(1)}h`}
           icon={<TrendingUp className="w-5 h-5" />}
           color="green"
         />
