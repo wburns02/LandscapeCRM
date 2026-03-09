@@ -31,7 +31,7 @@ export default function StatCard({ title, value, change, icon, color = 'green', 
   return (
     <div
       className={clsx(
-        'relative overflow-hidden rounded-xl border bg-gradient-to-br p-5',
+        'relative overflow-hidden rounded-xl border bg-gradient-to-br p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20',
         colorMap[color]
       )}
     >

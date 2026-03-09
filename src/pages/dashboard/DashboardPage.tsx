@@ -25,8 +25,19 @@ export default function DashboardPage() {
 
   if (isLoading || !dashboard) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-3 border-green-500 border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-6 animate-pulse">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-earth-800 bg-earth-900/40 p-5 space-y-3">
+              <div className="h-3 w-20 bg-earth-800 rounded" />
+              <div className="h-7 w-28 bg-earth-800 rounded" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 rounded-xl border border-earth-800 bg-earth-900/40 h-80" />
+          <div className="rounded-xl border border-earth-800 bg-earth-900/40 h-80" />
+        </div>
       </div>
     );
   }

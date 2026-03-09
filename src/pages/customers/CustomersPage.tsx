@@ -76,8 +76,8 @@ export default function CustomersPage() {
       <Badge color={typeColors[c.type] || 'earth'}>{c.type.replace('_', ' ')}</Badge>
     )},
     { key: 'phone', header: 'Phone', render: (c: Customer) => <span className="text-earth-300">{c.phone}</span> },
-    { key: 'email', header: 'Email', render: (c: Customer) => <span className="text-earth-300">{c.email}</span> },
-    { key: 'tags', header: 'Tags', render: (c: Customer) => (
+    { key: 'email', header: 'Email', className: 'hidden md:table-cell', render: (c: Customer) => <span className="text-earth-300">{c.email}</span> },
+    { key: 'tags', header: 'Tags', className: 'hidden lg:table-cell', render: (c: Customer) => (
       <div className="flex flex-wrap gap-1">
         {c.tags.map(t => <Badge key={t} color="earth">{t}</Badge>)}
       </div>
