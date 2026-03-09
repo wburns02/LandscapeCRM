@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type {
   Customer, Job, Crew, InventoryItem, Quote, Invoice, Contract,
   Equipment, Lead, Photo, DashboardData, SystemSettings, ScheduleEvent,
-  RecurringService,
+  RecurringService, Expense,
 } from '../types';
 import api from '../api/client';
 import { useAuth } from './AuthContext';
@@ -120,6 +120,10 @@ interface DataContextType {
   addRecurringService: (data: Partial<RecurringService>) => Promise<RecurringService>;
   updateRecurringService: (id: string, data: Partial<RecurringService>) => Promise<void>;
   generateServiceVisit: (serviceId: string) => Promise<void>;
+  expenses: Expense[];
+  addExpense: (data: Partial<Expense>) => Promise<Expense>;
+  updateExpense: (id: string, data: Partial<Expense>) => Promise<void>;
+  deleteExpense: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -140,6 +144,7 @@ function getDemoData(): {
   dashboard: DashboardData;
   settings: SystemSettings;
   recurringServices: RecurringService[];
+  expenses: Expense[];
 } {
   const customers: Customer[] = [
     { id: '1', name: 'Sarah Mitchell', email: 'sarah@example.com', phone: '(512) 555-0101', address: '1425 Oak Hollow Dr', city: 'Austin', state: 'TX', zip: '78745', type: 'residential', tags: ['premium', 'weekly'], property_size_sqft: 12000, notes: 'Large backyard with pool area', created_at: '2025-01-15T00:00:00Z', updated_at: '2026-03-01T00:00:00Z' },
@@ -394,6 +399,23 @@ function getDemoData(): {
       type: 'job' as const,
     })),
     recurringServices,
+    expenses: [
+      { id: 'exp1', job_id: '1', job: jobs[0], title: 'Mulch & topsoil delivery', category: 'materials', amount: 485.00, status: 'paid', vendor: 'Austin Landscape Supply', receipt_number: 'ALS-2026-0312', date: '2026-03-01', crew_id: '1', crew: crews[0], paid_at: '2026-03-03T00:00:00Z', created_at: '2026-03-01T08:00:00Z', updated_at: '2026-03-03T00:00:00Z' },
+      { id: 'exp2', job_id: '4', job: jobs[3], title: 'Travertine pavers (400 sqft)', category: 'materials', amount: 2340.00, status: 'paid', vendor: 'Stone Depot', receipt_number: 'SD-89234', date: '2026-02-20', crew_id: '1', crew: crews[0], paid_at: '2026-02-22T00:00:00Z', created_at: '2026-02-20T10:00:00Z', updated_at: '2026-02-22T00:00:00Z' },
+      { id: 'exp3', title: 'Diesel fuel - Alpha crew truck', category: 'fuel', amount: 187.50, status: 'approved', vendor: 'Buc-ees', date: '2026-03-05', crew_id: '1', crew: crews[0], approved_by: 'Will Maas', approved_at: '2026-03-05T18:00:00Z', created_at: '2026-03-05T07:00:00Z', updated_at: '2026-03-05T18:00:00Z' },
+      { id: 'exp4', title: 'Diesel fuel - Bravo crew truck', category: 'fuel', amount: 165.30, status: 'approved', vendor: 'Buc-ees', date: '2026-03-05', crew_id: '2', crew: crews[1], approved_by: 'Will Maas', approved_at: '2026-03-05T18:00:00Z', created_at: '2026-03-05T07:30:00Z', updated_at: '2026-03-05T18:00:00Z' },
+      { id: 'exp5', job_id: '5', job: jobs[4], title: 'Stump grinder rental (2 days)', category: 'equipment_rental', amount: 450.00, status: 'paid', vendor: 'Sunbelt Rentals', receipt_number: 'SBR-445521', date: '2026-03-02', crew_id: '3', crew: crews[2], paid_at: '2026-03-04T00:00:00Z', created_at: '2026-03-02T09:00:00Z', updated_at: '2026-03-04T00:00:00Z' },
+      { id: 'exp6', job_id: '3', job: jobs[2], title: 'Irrigation parts (sprinkler heads, PVC pipe)', category: 'materials', amount: 312.75, status: 'paid', vendor: 'Ewing Irrigation', receipt_number: 'EI-66892', date: '2026-02-28', crew_id: '2', crew: crews[1], paid_at: '2026-03-01T00:00:00Z', created_at: '2026-02-28T11:00:00Z', updated_at: '2026-03-01T00:00:00Z' },
+      { id: 'exp7', title: 'Tree disposal & hauling', category: 'disposal', amount: 275.00, status: 'pending', vendor: 'Austin Tree Recyclers', date: '2026-03-07', crew_id: '3', crew: crews[2], notes: 'Awaiting invoice from vendor', created_at: '2026-03-07T15:00:00Z', updated_at: '2026-03-07T15:00:00Z' },
+      { id: 'exp8', job_id: '6', job: jobs[5], title: 'Annuals & perennials (24 flats)', category: 'materials', amount: 528.00, status: 'approved', vendor: 'Barton Springs Nursery', receipt_number: 'BSN-3347', date: '2026-03-06', crew_id: '1', crew: crews[0], approved_by: 'Will Maas', approved_at: '2026-03-06T17:00:00Z', created_at: '2026-03-06T08:00:00Z', updated_at: '2026-03-06T17:00:00Z' },
+      { id: 'exp9', title: 'Subcontractor - electrical for landscape lighting', category: 'subcontractor', amount: 1200.00, status: 'pending', vendor: 'Bright Path Electric', date: '2026-03-04', job_id: '4', job: jobs[3], notes: 'Final invoice pending walkthrough', created_at: '2026-03-04T14:00:00Z', updated_at: '2026-03-04T14:00:00Z' },
+      { id: 'exp10', title: 'City tree trimming permit', category: 'permits', amount: 125.00, status: 'paid', vendor: 'City of Pflugerville', receipt_number: 'PFV-TREE-2026-014', date: '2026-02-26', job_id: '5', job: jobs[4], paid_at: '2026-02-26T00:00:00Z', created_at: '2026-02-26T10:00:00Z', updated_at: '2026-02-26T10:00:00Z' },
+      { id: 'exp11', title: 'Oil change & tire rotation - Truck #101', category: 'vehicle', amount: 189.00, status: 'paid', vendor: 'Firestone', receipt_number: 'FS-778844', date: '2026-03-03', paid_at: '2026-03-03T00:00:00Z', created_at: '2026-03-03T12:00:00Z', updated_at: '2026-03-03T00:00:00Z' },
+      { id: 'exp12', title: 'Weed barrier fabric & landscape staples', category: 'supplies', amount: 94.50, status: 'approved', vendor: 'Home Depot', receipt_number: 'HD-8834512', date: '2026-03-08', crew_id: '1', crew: crews[0], approved_by: 'Will Maas', approved_at: '2026-03-08T19:00:00Z', created_at: '2026-03-08T07:00:00Z', updated_at: '2026-03-08T19:00:00Z' },
+      { id: 'exp13', job_id: '2', job: jobs[1], title: 'Hardwood mulch - 15 yards', category: 'materials', amount: 675.00, status: 'paid', vendor: 'Whittlesey Landscape Supplies', receipt_number: 'WLS-2026-089', date: '2026-03-04', crew_id: '2', crew: crews[1], paid_at: '2026-03-06T00:00:00Z', created_at: '2026-03-04T08:00:00Z', updated_at: '2026-03-06T00:00:00Z' },
+      { id: 'exp14', title: 'Safety gear (gloves, eye protection, ear plugs)', category: 'supplies', amount: 156.80, status: 'paid', vendor: 'Grainger', receipt_number: 'GR-5567123', date: '2026-03-01', paid_at: '2026-03-01T00:00:00Z', created_at: '2026-03-01T09:00:00Z', updated_at: '2026-03-01T00:00:00Z' },
+      { id: 'exp15', title: 'Bobcat rental (weekend)', category: 'equipment_rental', amount: 850.00, status: 'rejected', vendor: 'United Rentals', date: '2026-03-02', notes: 'Rejected - too expensive, found cheaper option', created_at: '2026-03-02T08:00:00Z', updated_at: '2026-03-02T15:00:00Z' },
+    ],
     dashboard,
     settings,
   };
@@ -412,6 +434,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [recurringServices, setRecurringServices] = useState<RecurringService[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [scheduleEvents, setScheduleEvents] = useState<ScheduleEvent[]>([]);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
@@ -431,6 +454,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setLeads(demo.leads);
     setPhotos(demo.photos);
     setRecurringServices(demo.recurringServices);
+    setExpenses(demo.expenses);
     setScheduleEvents(demo.scheduleEvents);
     setDashboard(demo.dashboard);
     setSettings(demo.settings);
@@ -1028,6 +1052,51 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ));
   }, [recurringServices]);
 
+  const addExpense = useCallback(async (data: Partial<Expense>): Promise<Expense> => {
+    const newExpense: Expense = {
+      id: generateId(),
+      title: data.title || '',
+      category: data.category || 'other',
+      amount: data.amount || 0,
+      status: data.status || 'pending',
+      date: data.date || new Date().toISOString().split('T')[0],
+      job_id: data.job_id,
+      job: data.job,
+      crew_id: data.crew_id,
+      crew: data.crew,
+      vendor: data.vendor,
+      receipt_number: data.receipt_number,
+      description: data.description,
+      notes: data.notes,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const result = await api.post<Expense>('/expenses', data);
+      setExpenses(prev => [...prev, result]);
+      return result;
+    } catch {
+      setExpenses(prev => [...prev, newExpense]);
+      return newExpense;
+    }
+  }, []);
+
+  const updateExpense = useCallback(async (id: string, data: Partial<Expense>) => {
+    try {
+      await api.patch(`/expenses/${id}`, data);
+    } catch {
+      // demo fallback
+    }
+    setExpenses(prev => prev.map(e =>
+      e.id === id ? { ...e, ...data, updated_at: new Date().toISOString() } : e
+    ));
+  }, []);
+
+  const deleteExpense = useCallback(async (id: string) => {
+    try { await api.delete(`/expenses/${id}`); } catch { /* demo fallback */ }
+    setExpenses(prev => prev.filter(e => e.id !== id));
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchAll();
@@ -1050,6 +1119,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         updateInvoice, updateQuote,
         updateInventoryQuantity, recordPayment, deleteCustomer, deleteJob,
         recurringServices, addRecurringService, updateRecurringService, generateServiceVisit,
+        expenses, addExpense, updateExpense, deleteExpense,
       }}
     >
       {children}

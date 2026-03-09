@@ -587,6 +587,33 @@ export interface RecurringService {
   updated_at: string;
 }
 
+// --- Expenses ---
+
+export type ExpenseCategory = 'materials' | 'fuel' | 'equipment_rental' | 'subcontractor' | 'supplies' | 'disposal' | 'permits' | 'vehicle' | 'other';
+export type ExpenseStatus = 'pending' | 'approved' | 'paid' | 'rejected';
+
+export interface Expense {
+  id: string;
+  job_id?: string;
+  job?: Job;
+  title: string;
+  description?: string;
+  category: ExpenseCategory;
+  amount: number;
+  status: ExpenseStatus;
+  vendor?: string;
+  receipt_number?: string;
+  date: string;
+  crew_id?: string;
+  crew?: Crew;
+  approved_by?: string;
+  approved_at?: string;
+  paid_at?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // --- Direct Mail ---
 
 export type DirectMailStatus = 'draft' | 'ready' | 'sent_to_printer' | 'printed' | 'mailed' | 'delivered';
