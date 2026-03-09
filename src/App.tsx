@@ -39,6 +39,7 @@ import SmartEstimatorPage from './pages/estimator/SmartEstimatorPage';
 import WeatherCommandPage from './pages/weather/WeatherCommandPage';
 import CrewFieldHub from './pages/crew-hub/CrewFieldHub';
 import RevenueAutopilot from './pages/autopilot/RevenueAutopilot';
+import CustomerEngagementHub from './pages/engagement/CustomerEngagementHub';
 import SettingsPage from './pages/settings/SettingsPage';
 
 const pageTitles: Record<string, string> = {
@@ -67,6 +68,7 @@ const pageTitles: Record<string, string> = {
   '/weather': 'Weather Command',
   '/crew-hub': 'Crew Field Hub',
   '/autopilot': 'Revenue Autopilot',
+  '/engagement': 'Engagement Hub',
   '/route-planner': 'Route Planner',
   '/insights': 'Business Intelligence',
   '/photos': 'Photos',
@@ -118,6 +120,7 @@ function AppLayout() {
             <Route path="/weather" element={<WeatherCommandPage />} />
             <Route path="/crew-hub" element={<CrewFieldHub />} />
             <Route path="/autopilot" element={<RevenueAutopilot />} />
+            <Route path="/engagement" element={<CustomerEngagementHub />} />
             <Route path="/photos" element={<PhotosPage />} />
             <Route path="/portal" element={<CustomerPortalPage />} />
             <Route path="/reports" element={<ReportsPage />} />
