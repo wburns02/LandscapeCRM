@@ -41,6 +41,7 @@ import CrewFieldHub from './pages/crew-hub/CrewFieldHub';
 import RevenueAutopilot from './pages/autopilot/RevenueAutopilot';
 import CustomerEngagementHub from './pages/engagement/CustomerEngagementHub';
 import PropertyIntelligence from './pages/properties/PropertyIntelligence';
+import DailyCloseout from './pages/closeout/DailyCloseout';
 import SettingsPage from './pages/settings/SettingsPage';
 
 const pageTitles: Record<string, string> = {
@@ -71,6 +72,7 @@ const pageTitles: Record<string, string> = {
   '/autopilot': 'Revenue Autopilot',
   '/engagement': 'Engagement Hub',
   '/properties': 'Property Intelligence',
+  '/closeout': 'Daily Closeout',
   '/route-planner': 'Route Planner',
   '/insights': 'Business Intelligence',
   '/photos': 'Photos',
@@ -124,6 +126,7 @@ function AppLayout() {
             <Route path="/autopilot" element={<RevenueAutopilot />} />
             <Route path="/engagement" element={<CustomerEngagementHub />} />
             <Route path="/properties" element={<PropertyIntelligence />} />
+            <Route path="/closeout" element={<DailyCloseout />} />
             <Route path="/photos" element={<PhotosPage />} />
             <Route path="/portal" element={<CustomerPortalPage />} />
             <Route path="/reports" element={<ReportsPage />} />

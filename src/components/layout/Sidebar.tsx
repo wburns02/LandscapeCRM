@@ -5,7 +5,7 @@ import {
   Receipt, FileSignature, UsersRound, Wrench, Target, UserSearch, Mail,
   RefreshCw, Send, Camera, BarChart3, Settings, Menu, X, ChevronLeft, ChevronDown,
   Timer, ClipboardList, Globe, BadgeDollarSign, Calculator, Repeat, GitPullRequest, Route, Lightbulb,
-  Sparkles, CloudSun, HardHat, Rocket, MessageSquare, Trees,
+  Sparkles, CloudSun, HardHat, Rocket, MessageSquare, Trees, Moon,
   type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -79,6 +79,7 @@ const navSections: NavSection[] = [
   {
     title: '',
     items: [
+      { to: '/closeout', icon: Moon, label: 'Daily Closeout' },
       { to: '/portal', icon: Globe, label: 'Client Portal' },
       { to: '/insights', icon: Lightbulb, label: 'Intelligence' },
       { to: '/reports', icon: BarChart3, label: 'Reports' },
