@@ -7,6 +7,7 @@ import Sidebar from './components/layout/Sidebar';
 import TopBar from './components/layout/TopBar';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import CommandCenterPage from './pages/command-center/CommandCenterPage';
 import CustomersPage from './pages/customers/CustomersPage';
 import CustomerDetailPage from './pages/customers/CustomerDetailPage';
 import JobsPage from './pages/jobs/JobsPage';
@@ -35,7 +36,7 @@ import SalesPipelinePage from './pages/pipeline/SalesPipelinePage';
 import SettingsPage from './pages/settings/SettingsPage';
 
 const pageTitles: Record<string, string> = {
-  '/': 'Dashboard',
+  '/': 'Command Center',
   '/customers': 'Customers',
   '/jobs': 'Jobs',
   '/schedule': 'Schedule',
@@ -76,7 +77,7 @@ function AppLayout() {
         <TopBar title={title} />
         <main className="flex-1 p-4 lg:p-6">
           <Routes>
-            <Route path="/" element={<DashboardPage />} />
+            <Route path="/" element={<CommandCenterPage />} />
             <Route path="/customers" element={<CustomersPage />} />
             <Route path="/customers/:id" element={<CustomerDetailPage />} />
             <Route path="/jobs" element={<JobsPage />} />
