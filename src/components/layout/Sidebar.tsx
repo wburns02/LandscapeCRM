@@ -5,7 +5,7 @@ import {
   Receipt, FileSignature, UsersRound, Wrench, Target, UserSearch, Mail,
   RefreshCw, Send, Camera, BarChart3, Settings, Menu, X, ChevronLeft, ChevronDown,
   Timer, ClipboardList, Globe, BadgeDollarSign, Calculator, Repeat, GitPullRequest, Route, Lightbulb,
-  Sparkles, CloudSun, HardHat, Rocket, MessageSquare, Trees, Moon,
+  Sparkles, CloudSun, HardHat, Rocket, MessageSquare, Trees, Moon, Shield,
   type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -42,6 +42,7 @@ const navSections: NavSection[] = [
       { to: '/crews', icon: UsersRound, label: 'Crews' },
       { to: '/crew-hub', icon: HardHat, label: 'Crew Hub' },
       { to: '/time-tracking', icon: Timer, label: 'Time Tracking' },
+      { to: '/compliance', icon: Shield, label: 'Compliance' },
     ],
   },
   {
