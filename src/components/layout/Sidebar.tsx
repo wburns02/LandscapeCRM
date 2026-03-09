@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Gauge, Users, Briefcase, Calendar, Package, FileText,
   Receipt, FileSignature, UsersRound, Wrench, Target, UserSearch, Mail,
   RefreshCw, Send, Camera, BarChart3, Settings, Menu, X, ChevronLeft, ChevronDown,
-  Timer, ClipboardList, Globe, BadgeDollarSign, Calculator, Repeat, GitPullRequest,
+  Timer, ClipboardList, Globe, BadgeDollarSign, Calculator, Repeat, GitPullRequest, Route,
   type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -33,6 +33,7 @@ const navSections: NavSection[] = [
       { to: '/customers', icon: Users, label: 'Customers' },
       { to: '/jobs', icon: Briefcase, label: 'Jobs' },
       { to: '/schedule', icon: Calendar, label: 'Schedule' },
+      { to: '/route-planner', icon: Route, label: 'Route Planner' },
       { to: '/recurring-services', icon: RefreshCw, label: 'Recurring' },
       { to: '/crews', icon: UsersRound, label: 'Crews' },
       { to: '/time-tracking', icon: Timer, label: 'Time Tracking' },
