@@ -45,6 +45,7 @@ import DailyCloseout from './pages/closeout/DailyCloseout';
 import SafetyComplianceCommand from './pages/compliance/SafetyComplianceCommand';
 import SettingsPage from './pages/settings/SettingsPage';
 import LiveDispatchMap from './pages/dispatch/LiveDispatchMap';
+import InvoiceFollowUp from './pages/invoices/InvoiceFollowUp';
 
 const pageTitles: Record<string, string> = {
   '/': 'Command Center',
@@ -76,6 +77,7 @@ const pageTitles: Record<string, string> = {
   '/properties': 'Property Intelligence',
   '/closeout': 'Daily Closeout',
   '/compliance': 'Safety & Compliance',
+  '/reminders': 'Invoice Follow-Up',
   '/dispatch': 'Live Dispatch',
   '/route-planner': 'Route Planner',
   '/insights': 'Business Intelligence',
@@ -135,6 +137,7 @@ function AppLayout() {
             <Route path="/properties" element={<PropertyIntelligence />} />
             <Route path="/closeout" element={<DailyCloseout />} />
             <Route path="/compliance" element={<SafetyComplianceCommand />} />
+            <Route path="/reminders" element={<InvoiceFollowUp />} />
             <Route path="/dispatch" element={<LiveDispatchMap />} />
             <Route path="/photos" element={<PhotosPage />} />
             <Route path="/portal" element={<CustomerPortalPage />} />
