@@ -47,6 +47,7 @@ import SettingsPage from './pages/settings/SettingsPage';
 import LiveDispatchMap from './pages/dispatch/LiveDispatchMap';
 import InvoiceFollowUp from './pages/invoices/InvoiceFollowUp';
 import CustomerSatisfaction from './pages/satisfaction/CustomerSatisfaction';
+import ServiceBookingManager from './pages/booking/ServiceBookingManager';
 
 const pageTitles: Record<string, string> = {
   '/': 'Command Center',
@@ -80,6 +81,7 @@ const pageTitles: Record<string, string> = {
   '/compliance': 'Safety & Compliance',
   '/reminders': 'Invoice Follow-Up',
   '/satisfaction': 'Customer Satisfaction',
+  '/booking': 'Service Requests',
   '/dispatch': 'Live Dispatch',
   '/route-planner': 'Route Planner',
   '/insights': 'Business Intelligence',
@@ -141,6 +143,7 @@ function AppLayout() {
             <Route path="/compliance" element={<SafetyComplianceCommand />} />
             <Route path="/reminders" element={<InvoiceFollowUp />} />
             <Route path="/satisfaction" element={<CustomerSatisfaction />} />
+            <Route path="/booking" element={<ServiceBookingManager />} />
             <Route path="/dispatch" element={<LiveDispatchMap />} />
             <Route path="/photos" element={<PhotosPage />} />
             <Route path="/portal" element={<CustomerPortalPage />} />

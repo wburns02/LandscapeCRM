@@ -31,10 +31,10 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div
         className={clsx(
-          'relative bg-earth-900 border border-earth-700 rounded-2xl shadow-2xl w-full max-h-[90vh] flex flex-col',
+          'relative z-10 bg-earth-900 border border-earth-700 rounded-2xl shadow-2xl w-full max-h-[90vh] flex flex-col',
           {
             'max-w-sm': size === 'sm',
             'max-w-lg': size === 'md',

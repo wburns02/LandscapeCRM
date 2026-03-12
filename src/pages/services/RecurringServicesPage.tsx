@@ -461,8 +461,8 @@ export default function RecurringServicesPage() {
       {/* Detail Sidebar */}
       {selectedService && (
         <div className="fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setSelectedService(null)} />
-          <div className="ml-auto relative w-full max-w-md bg-earth-900 border-l border-earth-700/50 h-full overflow-y-auto animate-slide-in">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedService(null)} />
+          <div className="ml-auto relative z-10 w-full max-w-md bg-earth-900 border-l border-earth-700/50 h-full overflow-y-auto animate-slide-in">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-earth-100">Service Details</h2>
@@ -575,8 +575,8 @@ export default function RecurringServicesPage() {
       {/* Create Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setShowModal(false)} />
-          <div className="relative bg-earth-900 border border-earth-700/50 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowModal(false)} />
+          <div className="relative z-10 bg-earth-900 border border-earth-700/50 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-earth-100">New Recurring Service</h2>
