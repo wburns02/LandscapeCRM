@@ -50,6 +50,7 @@ import CustomerSatisfaction from './pages/satisfaction/CustomerSatisfaction';
 import ServiceBookingManager from './pages/booking/ServiceBookingManager';
 import IntegrationsHub from './pages/integrations/IntegrationsHub';
 import ServicePriceBook from './pages/pricebook/ServicePriceBook';
+import VendorPurchaseOrders from './pages/vendors/VendorPurchaseOrders';
 
 const pageTitles: Record<string, string> = {
   '/': 'Command Center',
@@ -86,6 +87,7 @@ const pageTitles: Record<string, string> = {
   '/booking': 'Service Requests',
   '/integrations': 'Integrations Hub',
   '/price-book': 'Service Price Book',
+  '/vendors': 'Vendors & POs',
   '/dispatch': 'Live Dispatch',
   '/route-planner': 'Route Planner',
   '/insights': 'Business Intelligence',
@@ -150,6 +152,7 @@ function AppLayout() {
             <Route path="/booking" element={<ServiceBookingManager />} />
             <Route path="/integrations" element={<IntegrationsHub />} />
             <Route path="/price-book" element={<ServicePriceBook />} />
+            <Route path="/vendors" element={<VendorPurchaseOrders />} />
             <Route path="/dispatch" element={<LiveDispatchMap />} />
             <Route path="/photos" element={<PhotosPage />} />
             <Route path="/portal" element={<CustomerPortalPage />} />
