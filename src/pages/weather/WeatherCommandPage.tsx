@@ -280,7 +280,9 @@ export default function WeatherCommandPage() {
   const weekDays = useMemo(() =>
     Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
-      return weatherData.find(w => isSameDay(w.date, date)) || weatherData[0];
+      const found = weatherData.find(w => isSameDay(w.date, date));
+      // Ensure each day has its correct date to avoid duplicate keys
+      return found ? found : { ...weatherData[0], date };
     }),
     [weekStart, weatherData]
   );
