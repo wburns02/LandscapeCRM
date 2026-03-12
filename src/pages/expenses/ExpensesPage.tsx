@@ -467,7 +467,7 @@ export default function ExpensesPage() {
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1a1510', border: '1px solid #3d3228', borderRadius: '8px' }}
                     labelStyle={{ color: '#d4c4a8' }}
-                    formatter={(value: number) => [formatMoney(value), 'Total']}
+                    formatter={((value: number) => [formatMoney(value), 'Total']) as any}
                   />
                   <Bar dataKey="total" fill="#22c55e" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -501,7 +501,7 @@ export default function ExpensesPage() {
                     />
                     <Tooltip
                       contentStyle={{ backgroundColor: '#1a1510', border: '1px solid #3d3228', borderRadius: '8px' }}
-                      formatter={(value: number) => [formatMoney(value), 'Amount']}
+                      formatter={((value: number) => [formatMoney(value), 'Amount']) as any}
                     />
                   </PieChart>
                 </ResponsiveContainer>

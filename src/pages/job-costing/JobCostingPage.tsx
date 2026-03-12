@@ -241,14 +241,12 @@ export default function JobCostingPage() {
           value={`$${fmt(totals.totalProfit)}`}
           icon={totals.totalProfit >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
           color={totals.totalProfit >= 0 ? 'green' : 'red'}
-          subtitle={`${totals.avgMargin.toFixed(1)}% avg margin`}
         />
         <StatCard
           title="Job Health"
           value={`${totals.profitable} healthy`}
           icon={<CheckCircle className="w-5 h-5" />}
           color="sky"
-          subtitle={totals.atRisk > 0 ? `${totals.atRisk} at risk` : 'All on track'}
         />
       </div>
 
@@ -265,7 +263,7 @@ export default function JobCostingPage() {
                 <Tooltip
                   contentStyle={{ backgroundColor: '#292520', border: '1px solid #3d3930', borderRadius: '8px' }}
                   labelStyle={{ color: '#e8e6e1' }}
-                  formatter={(value: number, name: string) => [`$${fmt(value)}`, name === 'revenue' ? 'Revenue' : name === 'cost' ? 'Cost' : 'Profit']}
+                  formatter={((value: number, name: string) => [`$${fmt(value)}`, name === 'revenue' ? 'Revenue' : name === 'cost' ? 'Cost' : 'Profit']) as any}
                 />
                 <Legend formatter={v => v === 'revenue' ? 'Revenue' : v === 'cost' ? 'Cost' : 'Profit'} />
                 <Bar dataKey="revenue" fill="#22c55e" radius={[0, 4, 4, 0]} barSize={14} />
@@ -296,7 +294,7 @@ export default function JobCostingPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{ backgroundColor: '#292520', border: '1px solid #3d3930', borderRadius: '8px' }}
-                    formatter={(value: number) => [`${value} jobs`]}
+                    formatter={((value: number) => [`${value} jobs`]) as any}
                   />
                   <Legend
                     verticalAlign="bottom"

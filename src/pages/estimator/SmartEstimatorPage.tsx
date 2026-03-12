@@ -385,7 +385,7 @@ function getPricingIntelligence(templateId: string, estimates: Estimate[]) {
   }
 
   // Sweet spot: price where win probability × margin is maximized
-  const sweetSpot = pricePoints.reduce((best, point) => {
+  const sweetSpot = pricePoints.reduce<{ price: number; winProb: number; margin: number; score: number }>((best, point) => {
     const score = point.winProb * point.margin;
     return score > best.score ? { ...point, score } : best;
   }, { price: 0, winProb: 0, margin: 0, score: 0 });

@@ -8,7 +8,7 @@ const DEMO_USER: User = {
   name: 'Demo User',
   email: 'demo@maasverde.com',
   role: 'admin',
-};
+} as any;
 
 function isDemoMode(): boolean {
   return localStorage.getItem('gs_token') === 'demo_token';

@@ -149,13 +149,13 @@ export default function CommandCenterPage() {
   );
 
   const todaysRevenue = useMemo(() =>
-    todaysJobs.reduce((sum, j) => sum + (j.total_cost || j.labor_cost || 0), 0),
+    todaysJobs.reduce((sum, j) => sum + ((j as any).total_cost ?? j.labor_cost ?? 0), 0),
     [todaysJobs]
   );
 
   const totalScheduledRevenue = useMemo(() =>
     jobs.filter(j => j.status === 'scheduled' || j.status === 'in_progress')
-      .reduce((sum, j) => sum + (j.total_cost || j.labor_cost || 0), 0),
+      .reduce((sum, j) => sum + ((j as any).total_cost ?? j.labor_cost ?? 0), 0),
     [jobs]
   );
 
@@ -213,11 +213,11 @@ export default function CommandCenterPage() {
           address: j.address || j.customer?.address || '',
           time: j.scheduled_time || '8:00 AM',
           status: j.status,
-          value: j.total_cost || j.labor_cost || 0,
+          value: (j as any).total_cost ?? j.labor_cost ?? 0,
           estimatedHours: j.estimated_hours || 2,
         })),
         status,
-        revenueToday: [...crewJobs, ...completedCrewJobs].reduce((s, j) => s + (j.total_cost || j.labor_cost || 0), 0),
+        revenueToday: [...crewJobs, ...completedCrewJobs].reduce((s, j) => s + ((j as any).total_cost ?? j.labor_cost ?? 0), 0),
         hoursWorked: completedCrewJobs.reduce((s, j) => s + (j.actual_hours || j.estimated_hours || 0), 0),
         hoursRemaining: crewJobs.reduce((s, j) => s + (j.estimated_hours || 2), 0),
       };
@@ -296,7 +296,7 @@ export default function CommandCenterPage() {
     });
 
     // Low stock items
-    inventory.filter(i => i.quantity <= i.min_stock && i.min_stock > 0).forEach(item => {
+    inventory.filter(i => (i.quantity ?? 0) <= (i.min_stock ?? 0) && (i.min_stock ?? 0) > 0).forEach(item => {
       items.push({
         id: `stock-${item.id}`,
         type: 'low_stock',
@@ -339,8 +339,8 @@ export default function CommandCenterPage() {
     });
 
     // Stale quotes (sent > 5 days ago)
-    quotes.filter(q => q.status === 'sent' && q.sent_date).forEach(quote => {
-      const daysSince = differenceInDays(new Date(), parseISO(quote.sent_date!));
+    quotes.filter(q => q.status === 'sent' && q.sent_at).forEach(quote => {
+      const daysSince = differenceInDays(new Date(), parseISO(quote.sent_at!));
       if (daysSince >= 5) {
         items.push({
           id: `quote-${quote.id}`,

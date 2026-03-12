@@ -544,7 +544,7 @@ export default function RecurringServicesPage() {
                 <div className="pt-4 space-y-2">
                   <Button
                     className="w-full"
-                    variant="outline"
+                    variant="secondary"
                     icon={<Pencil className="w-4 h-4" />}
                     onClick={() => { openEditModal(selectedService); setSelectedService(null); }}
                   >
@@ -557,7 +557,7 @@ export default function RecurringServicesPage() {
                       </Button>
                     )}
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       className="flex-1"
                       onClick={() => { handleToggleStatus(selectedService); setSelectedService(null); }}
                       icon={selectedService.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}

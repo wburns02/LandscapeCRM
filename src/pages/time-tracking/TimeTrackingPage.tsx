@@ -704,7 +704,7 @@ export default function TimeTrackingPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Badge color={job.margin > 30 ? 'green' : job.margin > 15 ? 'amber' : 'red'}>
-                          {job.margin.toFixed(0)}%
+                          {`${job.margin.toFixed(0)}%`}
                         </Badge>
                       </td>
                     </tr>

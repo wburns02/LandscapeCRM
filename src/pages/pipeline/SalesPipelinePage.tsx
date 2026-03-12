@@ -58,7 +58,7 @@ export default function SalesPipelinePage() {
     return quotes.map(quote => {
       // Find linked job (by quote_id or customer_id + matching title/amount)
       const linkedJob = jobs.find(j =>
-        j.quote_id === quote.id ||
+        (j as any).quote_id === quote.id ||
         (j.customer_id === quote.customer_id &&
           (j.title?.toLowerCase().includes(quote.title?.toLowerCase().split(' ')[0] || '') ||
            Math.abs((j.total_price || 0) - quote.total) < 1))
@@ -181,7 +181,7 @@ export default function SalesPipelinePage() {
         title: q.title,
         customer_id: q.customer_id,
         customer: customer,
-        quote_id: q.id,
+        ...({ quote_id: q.id } as any),
         status: 'scheduled',
         job_type: 'landscaping',
         scheduled_date: jobForm.scheduled_date,

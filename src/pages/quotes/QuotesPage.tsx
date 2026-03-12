@@ -121,8 +121,8 @@ export default function QuotesPage() {
       await addQuote({
         title: formData.title,
         customer_id: formData.customer_id,
-        customer: customer ? { id: customer.id, name: customer.name } : undefined,
-        line_items: items,
+        customer: (customer ? { id: customer.id, name: customer.name } : undefined) as any,
+        line_items: items as any,
         subtotal,
         tax_rate: taxRate,
         tax_amount: taxAmount,
@@ -166,7 +166,7 @@ export default function QuotesPage() {
       await updateQuote(editingQuote.id, {
         title: editFormData.title,
         customer_id: editFormData.customer_id,
-        customer: customer ? { id: customer.id, name: customer.name } : undefined,
+        customer: (customer ? { id: customer.id, name: customer.name } : undefined) as any,
         line_items: items,
         subtotal,
         tax_rate: taxRate,

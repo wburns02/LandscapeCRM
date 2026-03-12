@@ -480,7 +480,7 @@ export default function ProposalBuilderPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-xs text-earth-400 uppercase tracking-wider">{status}</p>
-                    <Badge color={statusColors[status]}>{count}</Badge>
+                    <Badge color={statusColors[status]}>{String(count)}</Badge>
                   </div>
                   <p className="text-xl font-bold text-earth-100">${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>

@@ -410,7 +410,7 @@ export default function CustomerPortalPage() {
             <Briefcase className="w-5 h-5 text-green-400" />
             Your Jobs
           </h2>
-          <Badge color="earth">{customerJobs.length} total</Badge>
+          <Badge color="earth">{`${customerJobs.length} total`}</Badge>
         </div>
 
         {customerJobs.length === 0 ? (
@@ -500,7 +500,7 @@ export default function CustomerPortalPage() {
             Proposals
           </h2>
           {pendingProposals.length > 0 && (
-            <Badge color="sky" dot>{pendingProposals.length} awaiting your review</Badge>
+            <Badge color="sky" dot>{`${pendingProposals.length} awaiting your review`}</Badge>
           )}
         </div>
 
@@ -693,7 +693,7 @@ export default function CustomerPortalPage() {
             Invoices & Payments
           </h2>
           {outstandingBalance > 0 && (
-            <Badge color="amber" dot>${formatCurrency(outstandingBalance)} outstanding</Badge>
+            <Badge color="amber" dot>{`$${formatCurrency(outstandingBalance)} outstanding`}</Badge>
           )}
         </div>
 

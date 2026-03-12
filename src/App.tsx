@@ -44,6 +44,7 @@ import PropertyIntelligence from './pages/properties/PropertyIntelligence';
 import DailyCloseout from './pages/closeout/DailyCloseout';
 import SafetyComplianceCommand from './pages/compliance/SafetyComplianceCommand';
 import SettingsPage from './pages/settings/SettingsPage';
+import LiveDispatchMap from './pages/dispatch/LiveDispatchMap';
 
 const pageTitles: Record<string, string> = {
   '/': 'Command Center',
@@ -75,6 +76,7 @@ const pageTitles: Record<string, string> = {
   '/properties': 'Property Intelligence',
   '/closeout': 'Daily Closeout',
   '/compliance': 'Safety & Compliance',
+  '/dispatch': 'Live Dispatch',
   '/route-planner': 'Route Planner',
   '/insights': 'Business Intelligence',
   '/photos': 'Photos',
@@ -83,19 +85,22 @@ const pageTitles: Record<string, string> = {
   '/settings': 'Settings',
 };
 
+const FULL_SCREEN_ROUTES = ['/dispatch'];
+
 function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
 
   const baseRoute = '/' + (location.pathname.split('/')[1] || '');
   const title = pageTitles[baseRoute] || 'Maas Verde CRM';
+  const isFullScreen = FULL_SCREEN_ROUTES.includes(baseRoute);
 
   return (
     <div className="flex min-h-screen bg-earth-950">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(c => !c)} />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar title={title} />
-        <main className="flex-1 p-4 lg:p-6">
+        <main className={isFullScreen ? 'flex-1 overflow-hidden' : 'flex-1 p-4 lg:p-6'}>
           <Routes>
             <Route path="/" element={<CommandCenterPage />} />
             <Route path="/customers" element={<CustomersPage />} />
@@ -130,6 +135,7 @@ function AppLayout() {
             <Route path="/properties" element={<PropertyIntelligence />} />
             <Route path="/closeout" element={<DailyCloseout />} />
             <Route path="/compliance" element={<SafetyComplianceCommand />} />
+            <Route path="/dispatch" element={<LiveDispatchMap />} />
             <Route path="/photos" element={<PhotosPage />} />
             <Route path="/portal" element={<CustomerPortalPage />} />
             <Route path="/reports" element={<ReportsPage />} />

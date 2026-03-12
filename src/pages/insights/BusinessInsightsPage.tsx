@@ -400,7 +400,7 @@ export default function BusinessInsightsPage() {
         iconColor: 'text-sky-400',
         iconBg: 'bg-sky-600/15',
         title: `Follow up on $${(topQuote.total || 0).toLocaleString()} quote`,
-        description: `${topQuote.customer?.name || 'Customer'} — sent ${topQuote.sent_date ? differenceInDays(new Date(), parseISO(topQuote.sent_date)) + ' days ago' : 'recently'}`,
+        description: `${topQuote.customer?.name || 'Customer'} — sent ${topQuote.sent_at ? differenceInDays(new Date(), parseISO(topQuote.sent_at)) + ' days ago' : 'recently'}`,
         impact: `+$${(topQuote.total || 0).toLocaleString()}`,
         impactColor: 'text-sky-400',
         actionLabel: 'Follow Up',
