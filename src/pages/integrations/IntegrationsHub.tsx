@@ -369,8 +369,8 @@ export default function IntegrationsHub() {
   }, [addToast]);
 
   // ── Export ────────────────────────────────────────────────────────────────
-  const handleExport = useCallback((type: string, format: ExportFormat, label: string) => {
-    const key = `${type}-${format}`;
+  const handleExport = useCallback((type: string, fmt: ExportFormat, label: string) => {
+    const key = `${type}-${fmt}`;
     setGeneratingExport(key);
     setTimeout(() => {
       setGeneratingExport(null);
@@ -380,7 +380,7 @@ export default function IntegrationsHub() {
         id: `ex-${Date.now()}`,
         name: `${label} — ${format(today, 'MMM d, yyyy')}`,
         type,
-        format,
+        format: fmt,
         records,
         size: `${sizeKb} KB`,
         created: today.toISOString(),
