@@ -1,0 +1,7 @@
+node_modules/
+test-results/
+dist/
+tests/**/*.png
+test-results/**/*.png
+*.py
+.claude/
